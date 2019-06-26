@@ -1,24 +1,37 @@
 doFTEST=0
-doFIT=0
-doPACKAGER=1
+doFIT=1
+doPACKAGER=0
 doCALCPHOSYST=0
 MASS=''
+if [ "$doFTEST" -eq "1" ]; then
+    if [ "$doFIT" -eq "0" ]; then
+	MASS='_125'
+	echo "ciao"
+    fi
+fi
 
-YEAR=""
-YEAR2="2016"
-#YEAR="_2017"
-#YEAR2="2017"
+#YEAR=""
+#YEAR2="2016"
+YEAR="_2017"
+YEAR2="2017"
 
-DATE="06_05_2019"
+DATE="26_06_2019"
 #EXT="singleHiggs"$YEAR2
 EXT="nodes"$YEAR2
 PHOTONSYSTFILE=dat/photonCatSyst.dat # without systematics
 #PHOTONSYSTFILE=dat/photonCatSyst_${EXT}.dat
 
-INDIR="/mnt/t3nfs01/data01/shome/nchernya/DiHiggs/inputs/${DATE}/"
-OUTDIR="output/out_fit_${DATE}_${EXT}"
+INDIR=""
+
+if   [ $YEAR2 == 2016 ]; then
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/2016/TAGSORTER_HHwithttHkiller_ttHlep_ttHhad/shifted_v2/"
+elif [ $YEAR2 == 2017 ]; then
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/2017/TAGSORTER_HHwithttHkiller_ttHlep_ttHhad/shifted_v2/"
+fi
+
+OUTDIR="output/out_fit_${DATE}_${EXT}/"
 if [ $doFTEST -gt 0 ]; then
-   OUTDIR="output/out_${DATE}_${EXT}"
+   OUTDIR="output/out_${DATE}_${EXT}/"
    #MASS=_125
    doFIT=0
 fi
@@ -26,9 +39,11 @@ CONFIGDAT="output/out_${DATE}_${EXT}/dat/newConfig_${EXT}.dat"
 #runLocal='--runLocal'
 runLocal=''
 
-BATCH=T3CH
-DEFAULTQUEUE="short.q -l h_vmem=6g"
-CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11"
+BATCH=LSF
+DEFAULTQUEUE="workday"
+#DEFAULTQUEUE="culo"
+#CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11"
+CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHLeptonicTag_0,TTHLeptonicTag_1,ZHLeptonicTag,WHLeptonicTag,VHLeptonicLooseTag,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,VBFTag_0,VBFTag_1,VBFTag_2,VHMetTag,VHHadronicTag,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3"
 REFTAG="DoubleHTag_0"
 INTLUMI=77.4
 
@@ -43,19 +58,25 @@ SCALESGLOBAL="NonLinearity,Geant4,LightYield,Absolute"
 #INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph_generated_2017$MASS"
 #####################################
 
+PROCS=""
+REFPROC=""
+INFILES=""
 
-##############2016#############
-#PROCS="GluGluToHHTo2B2G_node_SM_13TeV_madgraph_generated,GluGluHToGG_M_125_13TeV_powheg_pythia8,VBFHToGG_M_125_13TeV_powheg_pythia8,ttHToGG_M125_13TeV_powheg_pythia8_v2,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8"
-#REFPROC="ttHToGG_M125_13TeV_powheg_pythia8_v2"
-#INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph_generated$MASS,output_GluGluHToGG_M-125_13TeV_powheg_pythia8$MASS,output_VBFHToGG_M-125_13TeV_powheg_pythia8$MASS,output_ttHToGG_M125_13TeV_powheg_pythia8_v2$MASS,output_VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8$MASS"
-##############2017##############
-#PROCS="GluGluToHHTo2B2G_node_SM_13TeV_madgraph_generated_2017,GluGluHToGG_M_125_13TeV_powheg_pythia8_2017,VBFHToGG_M_125_13TeV_powheg_pythia8_2017,ttHToGG_M125_13TeV_powheg_pythia8_2017,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017"
-#REFPROC="ttHToGG_M125_13TeV_powheg_pythia8_2017"
-#INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph_generated_2017$MASS,output_GluGluHToGG_M-125_13TeV_powheg_pythia8_2017$MASS,output_VBFHToGG_M-125_13TeV_powheg_pythia8_2017$MASS,output_ttHToGG_M125_13TeV_powheg_pythia8_2017$MASS,output_VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017$MASS"
+if   [ $YEAR2 == 2016 ]; then
+    PROCS="GluGluToHHTo2B2G_node_SM_13TeV_madgraph,GluGluHToGG_M_125_13TeV_powheg_pythia8,VBFHToGG_M_125_13TeV_powheg_pythia8,ttHToGG_M125_13TeV_powheg_pythia8_v2,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8"
+    REFPROC="ttHToGG_M125_13TeV_powheg_pythia8_v2"
+    INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph$MASS,output_GluGluHToGG_M-125_13TeV_powheg_pythia8$MASS,output_VBFHToGG_M-125_13TeV_powheg_pythia8$MASS,output_ttHToGG_M125_13TeV_powheg_pythia8_v2$MASS,output_VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8$MASS"
+elif [ $YEAR2 == 2017 ]; then
+    PROCS="GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017,GluGluHToGG_M_125_13TeV_powheg_pythia8_2017,VBFHToGG_M_125_13TeV_powheg_pythia8_2017,ttHToGG_M125_13TeV_powheg_pythia8_2017,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017"
+    REFPROC="ttHToGG_M125_13TeV_powheg_pythia8_2017"
+    INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph_2017$MASS,output_GluGluHToGG_M-125_13TeV_powheg_pythia8_2017$MASS,output_VBFHToGG_M-125_13TeV_powheg_pythia8_2017$MASS,output_ttHToGG_M125_13TeV_powheg_pythia8_2017$MASS,output_VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017$MASS"
+fi
 #############NODES ############
-PROCS="GluGluToHHTo2B2G_node_SM_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_box_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_0_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_1_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_2_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_3_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_4_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_5_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_6_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_7_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_8_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_9_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_10_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_11_13TeV_madgraph$YEAR"
-REFPROC="GluGluToHHTo2B2G_node_SM_13TeV_madgraph$YEAR"
-INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_box_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_0_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_1_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_2_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_3_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_4_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_5_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_6_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_7_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_8_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_9_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_10_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_11_13TeV-madgraph$YEAR$MASS"
+#PROCS="GluGluToHHTo2B2G_node_SM_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_box_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_0_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_1_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_2_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_3_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_4_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_5_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_6_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_7_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_8_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_9_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_10_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_11_13TeV_madgraph$YEAR"
+#PROCS="GluGluToHHTo2B2G_node_SM_13TeV_madgraph$YEAR"
+#REFPROC="GluGluToHHTo2B2G_node_SM_13TeV_madgraph$YEAR"
+#INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_box_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_0_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_1_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_2_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_3_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_4_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_5_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_6_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_7_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_8_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_9_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_10_13TeV-madgraph$YEAR$MASS,output_GluGluToHHTo2B2G_node_11_13TeV-madgraph$YEAR$MASS"
+#INFILES="output_GluGluToHHTo2B2G_node_SM_13TeV-madgraph$YEAR$MASS"
 ################################
 
 
@@ -83,6 +104,7 @@ fi
 #ls dat/newConfig_${EXT}.dat
 if [ $doFTEST -gt 0 ]; then
   mkdir -p $OUTDIR/dat
+
   if [ -e ${OUTDIR}/dat/newConfig_${EXT}.dat ]; then
     echo "[INFO] sigFTest dat file $OUTDIR/dat/newConfig_${EXT}.dat already exists, so SKIPPING SIGNAL FTEST"
   else
@@ -95,25 +117,16 @@ if [ $doFTEST -gt 0 ]; then
     echo "=============================="
     echo "./python/submitSignaFTest.py --procs $PROCS --flashggCats $CATS --outDir $OUTDIR -i $INFILES  --indir $INDIR   --batch $BATCH -q '$DEFAULTQUEUE'"
     ./python/submitSignaFTest.py --procs $PROCS --flashggCats $CATS --outDir $OUTDIR -i $INFILES --indir $INDIR    --batch $BATCH -q "$DEFAULTQUEUE" $runLocal
-
-    PEND=`ls -l $OUTDIR/fTestJobs/sub*| grep -v "\.run" | grep -v "\.done" | grep -v "\.fail" | grep -v "\.err" |grep -v "\.log"  |wc -l`
-    TOTAL=`ls -l $OUTDIR/fTestJobs/sub*| grep "\.sh"  |wc -l`
-    echo "PEND $PEND"
-    while (( $PEND > 0 )) ; do
-      PEND=`ls -l $OUTDIR/fTestJobs/sub* | grep -v "\.run" | grep -v "\.done" | grep -v "\.fail" | grep -v "\.err" | grep -v "\.log" |wc -l`
-      RUN=`ls -l $OUTDIR/fTestJobs/sub* | grep "\.run" |wc -l`
-      FAIL=`ls -l $OUTDIR/fTestJobs/sub* | grep "\.fail" |wc -l`
-      DONE=`ls -l $OUTDIR/fTestJobs/sub* | grep "\.done" |wc -l`
-      (( PEND=$PEND-$RUN-$FAIL-$DONE ))
-      echo " PEND $PEND - RUN $RUN - DONE $DONE - FAIL $FAIL"
-      if (( $RUN > 0 )) ; then PEND=1 ; fi
-	   if (( $DONE == $TOTAL )) ; then PEND=0; fi
-      if (( $FAIL > 0 )) ; then 
-          echo "ERROR at least one job failed :"
-          ls -l $OUTDIR/fTestJobs/sub* | grep "\.fail"
-          exit 1
-      fi
-      sleep 10
+#    return 1
+    LOOP=1
+    while (( $LOOP == 1 )) ; do
+	echo "my jobs"
+	condor_q
+	echo 'If you are fine digit "continue"'
+	read -r input
+	if [[ $input = continue ]]; then
+	    LOOP=0
+	fi
     done
     mkdir -p $OUTDIR/dat
     cat $OUTDIR/fTestJobs/outputs/* > dat/newConfig_${EXT}_temp.dat
@@ -121,6 +134,7 @@ if [ $doFTEST -gt 0 ]; then
     mv dat/tmp_newConfig_${EXT}_temp.dat dat/newConfig_${EXT}_temp.dat
     cp dat/newConfig_${EXT}_temp.dat $OUTDIR/dat/copy_newConfig_${EXT}_temp.dat
     rm -rf $OUTDIR/sigfTest
+    cp -r $OUTDIR/fTest $OUTDIR/BACKUP_fTest
     mv $OUTDIR/fTest $OUTDIR/sigfTest
     echo "[INFO] sigFtest completed"
     echo "[INFO] using the results of the F-test as they are and building the signal model"
@@ -184,7 +198,7 @@ fi
 
 #./bin/PackageOutput  --skipMasses 120,130 -i $SIGFILES --procs $PROC_SM -l $LUMI -p $OUTDIR/sigfit -W wsig_13TeV -f $CATS -L 120 -H 130 -o $OUTDIR/CMS-HGG_sigfit_${EXT}_SMonly_${DATE}.root > package.out
 
-./bin/makeParametricSignalModelPlots -i  ${OUTDIR}/CMS-HGG_sigfit_${EXT}_SMonly_${DATE}.root -o $OUTDIR/signalModel -p GluGluToHHTo2B2G_node_SM_13TeV_madgraph$YEAR -f $CATS 
+#./bin/makeParametricSignalModelPlots -i  ${OUTDIR}/CMS-HGG_sigfit_${EXT}_SMonly_${DATE}.root -o $OUTDIR/signalModel -p GluGluToHHTo2B2G_node_SM_13TeV_madgraph$YEAR -f $CATS 
 
 #echo "./bin/PackageOutput -i $SIGFILES --procs $PROCS -l $INTLUMI -p $OUTDIR/sigfit -W wsig_13TeV -f $CATS -L 120 -H 130 -o $OUTDIR/CMS-HGG_sigfit_$EXT.root"
 #./bin/PackageOutput  --skipMasses 120,130 -i $SIGFILES --procs $PROCS -l $INTLUMI -p $OUTDIR/sigfit -W wsig_13TeV -f $CATS -L 120 -H 130 -o $OUTDIR/CMS-HGG_sigfit_${EXT}_test.root > package.out

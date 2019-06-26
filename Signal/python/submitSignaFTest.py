@@ -10,61 +10,6 @@ import re
 from optparse import OptionParser
 from optparse import OptionGroup
 
-
-from Queue import Queue
-
-from threading import Thread, Semaphore
-from multiprocessing import cpu_count
-
-class Wrap:
-    def __init__(self, func, args, queue):
-        self.queue = queue
-        self.func = func
-        self.args = args
-        
-    def __call__(self):
-        ret = self.func( *self.args )
-        self.queue.put( ret  )
-
-    
-class Parallel:
-    def __init__(self,ncpu):
-        self.running = Queue(ncpu)
-        self.returned = Queue()
-        self.njobs = 0
-  
-    def run(self,cmd,args):
-        wrap = Wrap( self, (cmd,args), self.returned )
-        self.njobs += 1
-        thread = Thread(None,wrap)
-        thread.start()
-        
-    def __call__(self,cmd,args):
-        if type(cmd) == str:
-            print cmd
-            for a in args:
-                cmd += " %s " % a
-            args = (cmd,)
-            cmd = commands.getstatusoutput
-        self.running.put((cmd,args))
-        ret = cmd( *args ) 
-        self.running.get()
-        self.running.task_done()
-        return ret
-
-def getFilesFromDatacard(datacard):
-    card = open(datacard,"r")
-    files = set()
-    for l in card.read().split("\n"):
-        if l.startswith("shape"):
-            toks = [t for t in l.split(" ") if t != "" ]
-            files.add(toks[3])
-    files = list(files)
-    ret = files[0]
-    for f in files[1:]:
-        ret += ",%s" % f
-    return ret
-
 parser = OptionParser()
 parser.add_option("-i","--infile",help="Signal Workspace")
 parser.add_option("-q","--queue",help="Which batch queue")
@@ -146,6 +91,8 @@ def writePostamble(sub_file, exec_line):
   sub_file.write('rm -rf scratch_$number\n')
   sub_file.close()
   system('chmod +x %s'%os.path.abspath(sub_file.name))
+  print 'does script exist?'
+  os.system("ls %s"%os.path.abspath(sub_file.name))
   if opts.runLocal:
      system('bash %s > %s.log'%(os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
   elif opts.queue:
@@ -153,7 +100,18 @@ def writePostamble(sub_file, exec_line):
     system('rm -f %s.fail'%os.path.abspath(sub_file.name))
     system('rm -f %s.log'%os.path.abspath(sub_file.name))
     system('rm -f %s.err'%os.path.abspath(sub_file.name))
-    if (opts.batch == "LSF") : system('bsub -q %s -o %s.log %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
+    condorsub = open(os.path.abspath(sub_file.name)+".sub",'w')
+    condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
+    condorsub.write("executable            = "+os.path.abspath(sub_file.name)+"\n")
+    condorsub.write("output                = "+os.path.abspath(sub_file.name)+".out\n")
+    condorsub.write("error                 = "+os.path.abspath(sub_file.name)+".err\n")
+    condorsub.write("log                   = "+os.path.abspath(sub_file.name)+".log\n")
+    condorsub.write('+JobFlavour           = "'+opts.queue+'"\n')
+    condorsub.write("queue 1\n")
+    condorsub.close()
+
+
+    if (opts.batch == "LSF") : system("condor_submit "+os.path.abspath(sub_file.name)+".sub")
     if (opts.batch == "IC") : system('qsub -q %s -o %s.log -e %s.err %s > out.txt'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
     if (opts.batch == "T3CH") : 
           command = 'qsub -q %s -o %s.log -e %s.err %s > out.txt'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name))
@@ -176,4 +134,4 @@ for proc in  opts.procs.split(","):
     exec_line = "%s/bin/signalFTest -i %s  -p %s -f %s --considerOnly %s -o %s/%s --datfilename %s/%s/fTestJobs/outputs/config_%d.dat %s" %(os.getcwd(), opts.infile,proc,opts.flashggCats,cat,os.getcwd(),opts.outDir,os.getcwd(),opts.outDir, counter,indirOpt)
     # print exec_line
     writePostamble(file,exec_line)
-
+    

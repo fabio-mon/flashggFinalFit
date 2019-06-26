@@ -158,23 +158,23 @@ outFile = open(options.outfilename,'w')
 #bkgProcs = ['bkg_mass','bbH_hgg','tHq_hgg','tHW_hgg'] #what to treat as background
 
 combProc = { 'bkg_mass':'bkg_mass'}
-allProcs = ["GluGluToHHTo2B2G_node_SM_13TeV_madgraph","GluGluToHHTo2B2G_node_SM_13TeV_madgraph_generated", "GluGluHToGG_M_125_13TeV_powheg_pythia8", "VBFHToGG_M_125_13TeV_powheg_pythia8","ttHToGG_M125_13TeV_powheg_pythia8_v2","VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8","bbHToGG_M_125_4FS_yb2_13TeV_amcatnlo""bbHToGG_M_125_4FS_ybyt_13TeV_amcatnlo",
-"GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017","GluGluToHHTo2B2G_node_SM_13TeV_madgraph_generated_2017","GluGluHToGG_M125_13TeV_amcatnloFXFX_pythia8_2017","GluGluHToGG_M_125_13TeV_powheg_pythia8_2017","VBFHToGG_M125_13TeV_amcatnlo_pythia8_2017","VBFHToGG_M_125_13TeV_powheg_pythia8_2017","ttHToGG_M125_13TeV_powheg_pythia8_2017","VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017"]
+allProcs = ["GluGluToHHTo2B2G_node_SM_13TeV_madgraph", "GluGluHToGG_M_125_13TeV_powheg_pythia8", "VBFHToGG_M_125_13TeV_powheg_pythia8","ttHToGG_M125_13TeV_powheg_pythia8_v2","VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8",
+"GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017","GluGluHToGG_M_125_13TeV_powheg_pythia8_2017","VBFHToGG_M_125_13TeV_powheg_pythia8_2017","ttHToGG_M125_13TeV_powheg_pythia8_2017","VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017"]
 allNodes=[]
 for proc in allProcs:
    combProc[proc] = proc
-whichNodes = list(np.arange(0,12,1))
-whichNodes.append('SM')
-whichNodes.append('box')
-for node in whichNodes:
-   proc = 'GluGluToHHTo2B2G_node_%s_13TeV_madgraph'%node
-   combProc[proc] = proc
-   allNodes.append(proc)
-   allProcs.append(proc)
-   proc = 'GluGluToHHTo2B2G_node_%s_13TeV_madgraph_2017'%node
-   combProc[proc] = proc
-   allProcs.append(proc)
-   allNodes.append(proc)
+#whichNodes = list(np.arange(0,12,1))
+#whichNodes.append('SM')
+#whichNodes.append('box')
+#for node in whichNodes:
+#   proc = 'GluGluToHHTo2B2G_node_%s_13TeV_madgraph'%node
+#   combProc[proc] = proc
+#   allNodes.append(proc)
+#   allProcs.append(proc)
+#   proc = 'GluGluToHHTo2B2G_node_%s_13TeV_madgraph_2017'%node
+#   combProc[proc] = proc
+#   allProcs.append(proc)
+#   allNodes.append(proc)
 
 	
 flashggProc = combProc
@@ -201,6 +201,13 @@ if 'wh' in options.procs.split(',') and 'zh' in options.procs.split(','):
   splitVH=True
 #split procs vector
 options.procs += ',bkg_mass'
+print "procId "
+print procId
+print
+print "combProc"
+print combProc 
+
+
 options.procs = [combProc[p] for p in options.procs.split(',')]
 options.toSkip = options.toSkip.split(',')
 ###############################################################################
@@ -331,9 +338,9 @@ else:
   fileDetails['qqH_hgg']       = [sigFile.replace('$PROC',"vbf"),sigWS,'hggpdfsmrel_%dTeV_vbf_$CHANNEL'%sqrts]
   fileDetails['ttH_hgg']       = [sigFile.replace('$PROC',"tth"),sigWS,'hggpdfsmrel_%dTeV_tth_$CHANNEL'%sqrts]
   for proc in allProcs:
-      if (proc in allNodes) and ('2017' in proc) : fileDetails[proc] = 	[nodesFile[1],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
-      elif proc in allNodes : fileDetails[proc] = 	[nodesFile[0],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
-      elif ('2017' in proc) : fileDetails[proc] = 	[sigFiles[1],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
+#      if (proc in allNodes) and ('2017' in proc) : fileDetails[proc] = 	[nodesFile[1],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
+#      elif proc in allNodes : fileDetails[proc] = 	[nodesFile[0],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
+      if ('2017' in proc) : fileDetails[proc] = 	[sigFiles[1],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
       else : fileDetails[proc] = 	[sigFiles[0],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
 
   if splitVH:
@@ -884,13 +891,13 @@ vtxSyst = 0.02 #updated for Moriond17
 #photon ID
 ##flashggSysts['MvaShift'] =  'phoIdMva'
 ##flashggSysts['LooseMvaSF'] =  'LooseMvaSF'
-flashggSysts['PreselSF']    =  'PreselSF'
-flashggSysts['SigmaEOverEShift'] = 'SigmaEOverEShift'
+#flashggSysts['PreselSF']    =  'PreselSF'
+#flashggSysts['SigmaEOverEShift'] = 'SigmaEOverEShift'
 ##flashggSysts['ElectronWeight'] = 'eff_e'
-flashggSysts['electronVetoSF'] = 'electronVetoSF'
+#flashggSysts['electronVetoSF'] = 'electronVetoSF'
 ##flashggSysts['MuonWeight'] = 'eff_m'
 ##flashggSysts['MuonMiniIsoWeight'] = 'eff_m_MiniIso'
-flashggSysts['TriggerWeight'] = 'TriggerWeight'
+#flashggSysts['TriggerWeight'] = 'TriggerWeight'
 ###flashggSysts['JetBTagWeight'] = 'eff_b'
 ##flashggSysts['JetBTagCutWeight'] = 'eff_b'
 ##flashggSysts['MvaLinearSyst'] = 'MvaLinearSyst'
@@ -899,8 +906,8 @@ flashggSysts['TriggerWeight'] = 'TriggerWeight'
 ##flashggSysts['metUncUncertainty'] = 'MET_Unclustered'
 ##flashggSysts['metJecUncertainty'] = 'MET_JEC'
 ##flashggSysts['metJerUncertainty'] = 'MET_JER'
-flashggSysts['JEC'] = 'JEC' 
-flashggSysts['JER'] = 'JER' 
+#flashggSysts['JEC'] = 'JEC' 
+#flashggSysts['JER'] = 'JER' 
 #flashggSysts['PUJIDShift'] = 'PUJIDShift' 
 
 
@@ -1035,14 +1042,17 @@ def printPreamble():
 ###############################################################################
 def printFileOptions():
   print '[INFO] File opts...'
+  print len(fileDetails)
   for typ, info in fileDetails.items():
-    for c in options.cats:
-      file = info[0].replace('$CAT','%s'%c)
-      wsname = info[1]
-      pdfname = info[2].replace('$CHANNEL','%s'%c)
-      if typ not in options.procs and typ!='data_obs': continue
-      #outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file.replace(".root","_%s_%s.root"%(typ,c)),wsname+':'+pdfname))
-      outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
+     print "key: "+typ
+     print "value: "
+     print info
+     for c in options.cats:
+        file = info[0].replace('$CAT','%s'%c)
+        wsname = info[1]
+        pdfname = info[2].replace('$CHANNEL','%s'%c)
+        if typ not in options.procs and typ!='data_obs': continue
+        outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
   outFile.write('\n')
 ###############################################################################
 

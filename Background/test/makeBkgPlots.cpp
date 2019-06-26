@@ -751,7 +751,7 @@ int main(int argc, char* argv[]){
 		("sqrts,S", po::value<int>(&sqrts)->default_value(8),																"Which centre of mass is this data from?")
 		("isFlashgg",  po::value<int>(&isFlashgg_)->default_value(1),  								    	        "Use Flashgg output ")
 		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,TTHHadronicTag,TTHLeptonicTag,VHHadronicTag,VHTightTag,VHLooseTag,VHEtTag"),       "Flashgg category names to consider")
-		("signalName", po::value<string>(&signalNameStr_)->default_value("GluGluToHHTo2B2G_node_SM_13TeV_madgraph_generated,GluGluToHHTo2B2G_node_SM_13TeV_madgraph_generated_2017"),       "Signal Name")
+		("signalName", po::value<string>(&signalNameStr_)->default_value("GluGluToHHTo2B2G_node_SM_13TeV_madgraph,GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017"),       "Signal Name")
 		("singleHiggsNames", po::value<string>(&singleHiggsNamesStr_)->default_value("ttHToGG_M125_13TeV_powheg_pythia8_v2,GluGluHToGG_M_125_13TeV_powheg_pythia8,VBFHToGG_M_125_13TeV_powheg_pythia8,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8,GluGluHToGG_M_125_13TeV_powheg_pythia8_2017,VBFHToGG_M_125_13TeV_powheg_pythia8_2017,ttHToGG_M125_13TeV_powheg_pythia8_2017,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017"),       "Signal Name")
 		("verbose,v", 																																			"Verbose");
 	;

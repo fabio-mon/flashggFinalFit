@@ -10,61 +10,6 @@ import re
 from optparse import OptionParser
 from optparse import OptionGroup
 
-
-from Queue import Queue
-
-from threading import Thread, Semaphore
-from multiprocessing import cpu_count
-
-class Wrap:
-    def __init__(self, func, args, queue):
-        self.queue = queue
-        self.func = func
-        self.args = args
-        
-    def __call__(self):
-        ret = self.func( *self.args )
-        self.queue.put( ret  )
-
-    
-class Parallel:
-    def __init__(self,ncpu):
-        self.running = Queue(ncpu)
-        self.returned = Queue()
-        self.njobs = 0
-  
-    def run(self,cmd,args):
-        wrap = Wrap( self, (cmd,args), self.returned )
-        self.njobs += 1
-        thread = Thread(None,wrap)
-        thread.start()
-        
-    def __call__(self,cmd,args):
-        if type(cmd) == str:
-            print cmd
-            for a in args:
-                cmd += " %s " % a
-            args = (cmd,)
-            cmd = commands.getstatusoutput
-        self.running.put((cmd,args))
-        ret = cmd( *args ) 
-        self.running.get()
-        self.running.task_done()
-        return ret
-
-def getFilesFromDatacard(datacard):
-    card = open(datacard,"r")
-    files = set()
-    for l in card.read().split("\n"):
-        if l.startswith("shape"):
-            toks = [t for t in l.split(" ") if t != "" ]
-            files.add(toks[3])
-    files = list(files)
-    ret = files[0]
-    for f in files[1:]:
-        ret += ",%s" % f
-    return ret
-
 parser = OptionParser()
 parser.add_option("-i","--infile",help="Signal Workspace")
 parser.add_option("-d","--datfile",help="dat file")
@@ -96,6 +41,8 @@ def system(exec_line):
   #if opts.verbose: print '\t', exec_line
   os.system(exec_line)
 
+
+
 def writePreamble(sub_file):
   #print "[INFO] writing preamble"
   sub_file.write('#!/bin/bash\n')
@@ -112,7 +59,6 @@ def writePreamble(sub_file):
   sub_file.write('eval `scramv1 runtime -sh`\n')
   if (opts.batch == "T3CH"):
       sub_file.write('set -x\n') 
-  if (opts.batch == "T3CH" ) : 
       sub_file.write('cd $TMPDIR\n')
   sub_file.write('number=$RANDOM\n')
   sub_file.write('mkdir -p scratch_$number\n')
@@ -143,7 +89,7 @@ def writePostamble(sub_file, exec_line):
     system('rm -f %s.fail'%os.path.abspath(sub_file.name))
     system('rm -f %s.log'%os.path.abspath(sub_file.name))
     system('rm -f %s.err'%os.path.abspath(sub_file.name))
-    if (opts.batch == "LSF") : system('bsub -q %s -o %s.log %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
+    #if (opts.batch == "LSF") : system('bsub -q %s -o %s.log %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
     if (opts.batch == "T3CH") : 
       system('qsub -q %s -o %s.log -e %s.err %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
     if (opts.batch == "IC") : 
@@ -180,8 +126,18 @@ for proc in  opts.procs.split(","):
     else:
       bsRW=1
     exec_line = "%s/bin/SignalFit --verbose 0 -i %s -d %s/%s  --mhLow=%s --mhHigh=%s -s %s/%s --procs %s -o  %s/%s -p %s/%s -f %s --changeIntLumi %s --binnedFit 1 --nBins 320 --split %s,%s --beamSpotReweigh %d --dataBeamSpotWidth %f --massList %s --useDCBplusGaus %s --useSSF %s %s %s %s" %(os.getcwd(), opts.infile,os.getcwd(),opts.datfile,opts.mhLow, opts.mhHigh, os.getcwd(),opts.systdatfile, opts.procs,os.getcwd(),opts.outfilename.replace(".root","_%s_%s.root"%(proc,cat)), os.getcwd(),opts.outDir, opts.flashggCats ,opts.changeIntLumi, proc,cat,bsRW,float(opts.bs), opts.massList, opts.useDCB_1G, opts.useSSF,refProcOpt,refTagOpt,indirOpt)
-    #print exec_line
+    print exec_line
     writePostamble(file,exec_line)
 
-
-
+if (opts.batch == "LSF") : 
+  print("writing .sub file")
+  condorsub = open(os.path.abspath(file.name)+".sub",'w')
+  condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
+  condorsub.write("executable            = $(scriptname)\n")
+  condorsub.write("output                = $(scriptname).out\n")
+  condorsub.write("error                 = $(scriptname).err\n")
+  condorsub.write("log                   = $(scriptname).log\n")
+  condorsub.write('+JobFlavour           = "'+opts.queue+'"\n')
+  condorsub.write("queue scriptname matching %s/SignalFitJobs/sub*.sh"%opts.outDir)
+  condorsub.close()
+  system("condor_submit "+os.path.abspath(file.name)+".sub")

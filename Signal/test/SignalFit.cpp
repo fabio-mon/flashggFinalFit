@@ -236,8 +236,8 @@ void OptionParser(int argc, char *argv[]){
 	if( !(dirnameStr_.empty()) ){
       for (int iname =0 ; iname < filename_.size() ; iname++){
 			for (int mass_num = 0; mass_num < massListVector_.size(); mass_num++) {
-        	//	dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]+"_"+massListVector_[mass_num]+".root");
-        		dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]+".root");
+        		dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]+"_"+massListVector_[mass_num]+".root");
+			  //dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]+".root");
 			}
 	   }
       for (int iname =0 ; iname < dirfilename_.size() ; iname++){
@@ -252,10 +252,12 @@ void OptionParser(int argc, char *argv[]){
 
 // used to get index of the reference dataset in the list of requried guassians.
 unsigned int getIndexOfReferenceDataset(string proc, string cat){
+  //std::cout << "looking for proc: " << proc << "\tcat: " << cat << std::endl;
   int iLine =-1;
   for(unsigned int i =0 ; i < map_proc_.size() ; i++){
     string this_process = map_proc_[i];
     string this_cat = map_cat_[i];
+    //std::cout<<"process: "<<this_process<<"\tcat: "<<this_cat<<std::endl;
     if (this_process.compare(proc) ==0 ){
       if ( this_cat.compare(cat)==0 ){ 
         iLine=i;
@@ -541,7 +543,7 @@ int main(int argc, char *argv[]){
 		if (verbose_) {
 			std::cout << " [INFO] WS contains " << std::endl;
 			for (std::list<RooAbsData*>::const_iterator iterator = test.begin(), end = test.end(); iterator != end; ++iterator) {
-		//		std::cout << **iterator << std::endl;
+				std::cout << **iterator << std::endl;
 			}
 		}
 	} else {
@@ -678,15 +680,17 @@ int main(int argc, char *argv[]){
         map_replacement_cat_WV_.push_back(els[7]);
       } else {
         // if no replacement is speficied, use defaults
-        if (cat.compare(0,3,"TTH") ==0){
+        
+	  if (cat.compare(0,3,"TTH") ==0){
           // if the cat starts with TTH, use TTH reference process.
           // howwver this is over-riden later if the WV needs to be replaced
           // as even teh TTH tags in WV has limited stats
-          map_replacement_proc_RV_.push_back(referenceProcTTH_);
+          //map_replacement_proc_RV_.push_back(referenceProcTTH_);
+	  map_replacement_proc_RV_.push_back(referenceProc_);
           map_replacement_cat_RV_.push_back(cat);
           map_replacement_proc_WV_.push_back(referenceProc_); //use defaults for replacement WV if they are needed
           map_replacement_cat_WV_.push_back(referenceTagWV_);//use defaults for replacement WV if they are needed
-        } else {
+	  } else {
          // else use the ggh
          map_replacement_proc_RV_.push_back(referenceProc_);
          map_replacement_cat_RV_.push_back(referenceTagRV_); //deflaut is ggh UntaggedTag3

@@ -19,7 +19,7 @@ echo " \author{}		    " >> all.tex
 echo " \date{}			    " >> all.tex
 echo " \maketitle                   " >> all.tex
 
-for file in `ls ./$DIR/fTestJobs/sub*.sh.log`; do
+for file in `ls ./$DIR/fTestJobs/sub*.sh.out`; do
     echo $file
     grep TEX $file | awk '{ print substr($0,6) }' > $file.tex
 
@@ -39,7 +39,7 @@ echo " \end{document}		    " >> all.tex
 pdflatex all.tex
 mv all.pdf $DIR.pdf
 
-rm all.tex
+#rm all.tex
 rm all.aux
 rm all.log
 rm sub*.log.pdf
