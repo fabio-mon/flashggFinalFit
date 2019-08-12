@@ -193,61 +193,59 @@ void OptionParser(int argc, char *argv[]){
 	if (vm.count("skipSecondaryModels"))      doSecondaryModels_=false;
 	if (vm.count("nonRecursive"))                recursive_=false;
 	if (vm.count("skipMasses")) {
-		cout << "[INFO] Masses to skip... " << endl;
-		vector<string> els;
-
-    // if you want to skip masses for some reason...
-		split(els,massesToSkip_,boost::is_any_of(","));
-		if (els.size()>0 && massesToSkip_!="") {
-			for (vector<string>::iterator it=els.begin(); it!=els.end(); it++) {
-				skipMasses_.push_back(boost::lexical_cast<int>(*it));
-			}
-		}
-		cout << "\t";
-		for (vector<int>::iterator it=skipMasses_.begin(); it!=skipMasses_.end(); it++) cout << *it << " ";
-		cout << endl;
+	  cout << "[INFO] Masses to skip... " << endl;
+	  vector<string> els;
+	  // if you want to skip masses for some reason...
+	  split(els,massesToSkip_,boost::is_any_of(","));
+	  if (els.size()>0 && massesToSkip_!="") {
+	    for (vector<string>::iterator it=els.begin(); it!=els.end(); it++) {
+	      skipMasses_.push_back(boost::lexical_cast<int>(*it));
+	    }
+	  }
+	  cout << "\t";
+	  for (vector<int>::iterator it=skipMasses_.begin(); it!=skipMasses_.end(); it++) cout << *it << " ";
+	  cout << endl;
 	}
 	if (vm.count("massList")) {
-		cout << "[INFO] Masses to process... " << endl;
-		vector<string> els;
+	  cout << "[INFO] Masses to process... " << endl;
+	  vector<string> els;
 
-    // if you want to skip masses for some reason...
-		split(els,massListStr_,boost::is_any_of(","));
-		if (els.size()>0 && massListStr_!="") {
-			for (vector<string>::iterator it=els.begin(); it!=els.end(); it++) {
-				massList_.push_back(boost::lexical_cast<int>(*it));
-			}
-		}
-		cout << "\t";
-		for (vector<int>::iterator it=massList_.begin(); it!=massList_.end(); it++) cout << *it << " ";
-		cout << endl;
+	  // if you want to skip masses for some reason...
+	  split(els,massListStr_,boost::is_any_of(","));
+	  if (els.size()>0 && massListStr_!="") {
+	    for (vector<string>::iterator it=els.begin(); it!=els.end(); it++) {
+	      massList_.push_back(boost::lexical_cast<int>(*it));
+	    }
+	  }
+	  cout << "\t";
+	  for (vector<int>::iterator it=massList_.begin(); it!=massList_.end(); it++) cout << *it << " ";
+	  cout << endl;
 	}
 	
-  // split options which are fiven as lists
-  split(procs_,procStr_,boost::is_any_of(","));
+	// split options which are fiven as lists
+	split(procs_,procStr_,boost::is_any_of(","));
 	split(flashggCats_,flashggCatsStr_,boost::is_any_of(","));
 	split(filename_,filenameStr_,boost::is_any_of(","));
-  split(split_,splitStr_,boost::is_any_of(",")); // proc,cat
+	split(split_,splitStr_,boost::is_any_of(",")); // proc,cat
 	vector<string> massListVector_;
 	split(massListVector_,massListStr_,boost::is_any_of(","));
-
-   vector<string> dirfilename_;
-   string fullFilename_ = "";
+	
+	vector<string> dirfilename_;
+	string fullFilename_ = "";
 	if( !(dirnameStr_.empty()) ){
-      for (int iname =0 ; iname < filename_.size() ; iname++){
-			for (int mass_num = 0; mass_num < massListVector_.size(); mass_num++) {
-        		dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]+"_"+massListVector_[mass_num]+".root");
-			  //dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]+".root");
-			}
-	   }
-      for (int iname =0 ; iname < dirfilename_.size() ; iname++){
-        if (iname<(dirfilename_.size()-1)) fullFilename_=fullFilename_+dirfilename_[iname]+",";
-        if (iname==dirfilename_.size()-1) fullFilename_=fullFilename_+dirfilename_[iname];
-		}
-	   filenameStr_ = fullFilename_;
+	  for (int iname =0 ; iname < filename_.size() ; iname++){
+	    //for (int mass_num = 0; mass_num < massListVector_.size(); mass_num++) {
+	    //dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]+"_"+massListVector_[mass_num]+".root");
+	    dirfilename_.push_back(dirnameStr_+"/"+filename_[iname]);
+	  }
+	  for (int iname =0 ; iname < dirfilename_.size() ; iname++){
+	    if (iname<(dirfilename_.size()-1)) 
+	      fullFilename_=fullFilename_+dirfilename_[iname]+",";
+	    if (iname==dirfilename_.size()-1) 
+	      fullFilename_=fullFilename_+dirfilename_[iname];
+	  }
+	  filenameStr_ = fullFilename_;
 	}
-
-
 }
 
 // used to get index of the reference dataset in the list of requried guassians.
@@ -645,63 +643,53 @@ int main(int argc, char *argv[]){
   } else {
     if (verbose_) std::cout << "[INFO] openign dat file "<< datfile<< std::endl;
     //loop over it 
-	  while (datfile.good()){
-		  string line;
-		  getline(datfile,line);
-		  if (line=="\n" || line.substr(0,1)=="#" || line==" " || line.empty()) continue;
-		  vector<string> els;
-		  split(els,line,boost::is_any_of(" "));
-		  if( els.size()!=4 && els.size()!=6 && els.size()!=8) {
-			  cerr << "Malformed line " << line << " " << els.size() <<endl;
-			  assert(0);
-		  }
+    while (datfile.good()){
+      string line;
+      getline(datfile,line);
+      if (line=="\n" || line.substr(0,1)=="#" || line==" " || line.empty()) continue;
+      vector<string> els;
+      split(els,line,boost::is_any_of(" "));
+      if( els.size()!=4 && els.size()!=6 && els.size()!=8) {
+	cerr << "Malformed line " << line << " " << els.size() <<endl;
+	assert(0);
+      }
 
       // the defaukt info need: proc, tag, nRv, nrWV
       string proc = els[0];
-		  string cat = els[1]; // used to be an int, string directly now...
-		  int nGaussiansRV = boost::lexical_cast<int>(els[2]);
-		  int nGaussiansWV = boost::lexical_cast<int>(els[3]);
-
+      string cat = els[1]; // used to be an int, string directly now...
+      int nGaussiansRV = boost::lexical_cast<int>(els[2]);
+      int nGaussiansWV = boost::lexical_cast<int>(els[3]);
+      
       // have a different appraoch now but could re-use machinery.
       //std::cout << " LC DEBUG here is your line " << line << " els.size()==6 " << (els.size()==6) <<  std::endl;
-		  if( els.size()==6 ) { // in this case you have specified a replacement tag for RV!
-			  //replaceWith_RV_ = make_pair(els[4],els[5]); // proc, cat
+      if( els.size()==6 ) { // in this case you have specified a replacement tag for RV!
+	//replaceWith_RV_ = make_pair(els[4],els[5]); // proc, cat
         map_replacement_proc_RV_.push_back(els[4]);
         map_replacement_cat_RV_.push_back(els[5]);
         map_replacement_proc_WV_.push_back(referenceProc_); //use defaults for replacement WV if they are needed
         map_replacement_cat_WV_.push_back(referenceTagWV_);//use defaults for replacement WV if they are needed
-		  } else if( els.size()==8 ) { // in this case you have specified a replacement tag for RV and WV!
-			  //replaceWithRV_ = make_pair(els[4],els[5]); // proc, cat
-			  //replaceWithWV_ = make_pair(els[6],els[7]); // proc, cat
-		   	//replace_ = true;
+      } 
+      else if( els.size()==8 ) { // in this case you have specified a replacement tag for RV and WV!
+	//replaceWithRV_ = make_pair(els[4],els[5]); // proc, cat
+	//replaceWithWV_ = make_pair(els[6],els[7]); // proc, cat
+	//replace_ = true;
         map_replacement_proc_RV_.push_back(els[4]);
         map_replacement_cat_RV_.push_back(els[5]);
         map_replacement_proc_WV_.push_back(els[6]);
         map_replacement_cat_WV_.push_back(els[7]);
-      } else {
-        // if no replacement is speficied, use defaults
-        
-	  if (cat.compare(0,3,"TTH") ==0){
-          // if the cat starts with TTH, use TTH reference process.
-          // howwver this is over-riden later if the WV needs to be replaced
-          // as even teh TTH tags in WV has limited stats
-          //map_replacement_proc_RV_.push_back(referenceProcTTH_);
-	  map_replacement_proc_RV_.push_back(referenceProc_);
-          map_replacement_cat_RV_.push_back(cat);
-          map_replacement_proc_WV_.push_back(referenceProc_); //use defaults for replacement WV if they are needed
-          map_replacement_cat_WV_.push_back(referenceTagWV_);//use defaults for replacement WV if they are needed
-	  } else {
-         // else use the ggh
-         map_replacement_proc_RV_.push_back(referenceProc_);
-         map_replacement_cat_RV_.push_back(referenceTagRV_); //deflaut is ggh UntaggedTag3
-         map_replacement_proc_WV_.push_back(referenceProc_); //use defaults for replacement WV if they are needed
-         map_replacement_cat_WV_.push_back(referenceTagWV_);//use defaults for replacement WV if they are needed
-        }
+      } 
+      else {
+	// if no replacement is speficied, use defaults
+	// else use the ggh
+	map_replacement_proc_RV_.push_back(referenceProc_);
+	map_replacement_cat_RV_.push_back(referenceTagRV_); //deflaut is ggh UntaggedTag3
+	map_replacement_proc_WV_.push_back(referenceProc_); //use defaults for replacement WV if they are needed
+	map_replacement_cat_WV_.push_back(referenceTagWV_);//use defaults for replacement WV if they are needed
       }
       if (verbose_) std::cout << "[INFO] dat file listing: "<< proc << " " << cat << " " << nGaussiansRV << " " << nGaussiansWV <<  " " << std::endl;
       if (verbose_) std::cout << "[INFO] dat file listing: ----> selected replacements (RV) if needed " <<  map_replacement_proc_RV_[map_replacement_proc_RV_.size() -1] << " " <<  map_replacement_cat_RV_[map_replacement_cat_RV_.size() -1] << std::endl;
       if (verbose_) std::cout << "[INFO] dat file listing: ----> selected replacements (WV) if needed " <<  map_replacement_proc_WV_[map_replacement_proc_WV_.size() -1] << " " <<  map_replacement_cat_WV_[map_replacement_cat_WV_.size() -1] << std::endl;
-
+    
       map_proc_.push_back(proc);
       map_cat_.push_back(cat);
       map_nG_rv_.push_back(nGaussiansRV);
@@ -710,7 +698,7 @@ int main(int argc, char *argv[]){
     datfile.close();
   }
   
-  // now start the proper loop, so loop over teh maps we filled above.
+// now start the proper loop, so loop over teh maps we filled above.
   for (unsigned int iLine = 0 ; iLine < map_proc_.size() ; iLine++){
     string proc = map_proc_[iLine] ;
     string cat = map_cat_[iLine];

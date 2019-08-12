@@ -10,7 +10,16 @@ import re
 from optparse import OptionParser
 from optparse import OptionGroup
 
+replacement_dictionary = {
+    "hh"  : ["hh"  , "DoubleHTag_0"],
+    "tth" : ["tth" , "TTHHadronicTag_3"],
+    "ggh" : ["ggh" , "UntaggedTag_3"], 
+    "qqh" : ["ggh" , "UntaggedTag_3"],
+    "vh"  : ["ggh" , "UntaggedTag_3"]
+    }
+
 parser = OptionParser()
+parser.add_option("-y","--year",help="Year")
 parser.add_option("-i","--infile",help="Signal Workspace")
 parser.add_option("-d","--datfile",help="dat file")
 parser.add_option("-s","--systdatfile",help="systematics dat file")
@@ -18,7 +27,6 @@ parser.add_option("--mhLow",default="120",help="mh Low")
 parser.add_option("--mhHigh",default="130",help="mh High")
 parser.add_option("-q","--queue",help="Which batch queue")
 parser.add_option("--runLocal",default=False,action="store_true",help="Run locally")
-parser.add_option("--batch",default="LSF",help="Which batch system to use (LSF,IC)")
 parser.add_option("--changeIntLumi",default="1.")
 parser.add_option("-o","--outfilename",default=None)
 parser.add_option("-p","--outDir",default="./")
@@ -34,110 +42,101 @@ parser.add_option("--refTag",default="",help="ref replacement tag ")
 parser.add_option("--indir",default="",help="infile directory ")
 (opts,args) = parser.parse_args()
 
-defaults = copy(opts)
-print "INFO - queue ", opts.queue
-def system(exec_line):
-  #print "[INFO] defining exec_line"
-  #if opts.verbose: print '\t', exec_line
-  os.system(exec_line)
-
-
-
-def writePreamble(sub_file):
-  #print "[INFO] writing preamble"
-  sub_file.write('#!/bin/bash\n')
-  if (opts.batch == "T3CH"):
-      sub_file.write('set -x\n')
-  sub_file.write('touch %s.run\n'%os.path.abspath(sub_file.name))
-  sub_file.write('cd %s\n'%os.getcwd())
-  if (opts.batch == "T3CH"):
-      sub_file.write('source $VO_CMS_SW_DIR/cmsset_default.sh\n')
-      sub_file.write('source /mnt/t3nfs01/data01/swshare/glite/external/etc/profile.d/grid-env.sh\n')
-      sub_file.write('export SCRAM_ARCH=slc6_amd64_gcc481\n')
-      sub_file.write('export LD_LIBRARY_PATH=/swshare/glite/d-cache/dcap/lib/:$LD_LIBRARY_PATH\n')
-      sub_file.write('set +x\n') 
-  sub_file.write('eval `scramv1 runtime -sh`\n')
-  if (opts.batch == "T3CH"):
-      sub_file.write('set -x\n') 
-      sub_file.write('cd $TMPDIR\n')
-  sub_file.write('number=$RANDOM\n')
-  sub_file.write('mkdir -p scratch_$number\n')
-  sub_file.write('cd scratch_$number\n')
-
-def writePostamble(sub_file, exec_line):
-
-  #print "[INFO] writing to postamble"
-  sub_file.write('\t echo "PREPARING TO RUN "\n')
-  sub_file.write('if ( %s ) then\n'%exec_line)
-  #sub_file.write('\t mv higgsCombine*.root %s\n'%os.path.abspath(opts.outDir))
-  sub_file.write('\t echo "DONE" \n')
-  sub_file.write('\t touch %s.done\n'%os.path.abspath(sub_file.name))
-  sub_file.write('else\n')
-  sub_file.write('\t echo "FAIL" \n')
-  sub_file.write('\t touch %s.fail\n'%os.path.abspath(sub_file.name))
-  sub_file.write('fi\n')
-  sub_file.write('cd -\n')
-  sub_file.write('\t echo "RM RUN "\n')
-  sub_file.write('rm -f %s.run\n'%os.path.abspath(sub_file.name))
-  sub_file.write('rm -rf scratch_$number\n')
-  sub_file.close()
-  system('chmod +x %s'%os.path.abspath(sub_file.name))
-  if opts.runLocal:
-     system('bash %s > %s.log'%(os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
-  elif opts.queue:
-    system('rm -f %s.done'%os.path.abspath(sub_file.name))
-    system('rm -f %s.fail'%os.path.abspath(sub_file.name))
-    system('rm -f %s.log'%os.path.abspath(sub_file.name))
-    system('rm -f %s.err'%os.path.abspath(sub_file.name))
-    #if (opts.batch == "LSF") : system('bsub -q %s -o %s.log %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
-    if (opts.batch == "T3CH") : 
-      system('qsub -q %s -o %s.log -e %s.err %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
-    if (opts.batch == "IC") : 
-      system('qsub -q %s -l h_rt=0:20:0 -o %s.log -e %s.err %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
-      #print "system(",'qsub -q %s -o %s.log -e %s.err %s '%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)),")"
-
-
-#######################################
-
   
-system('mkdir -p %s/SignalFitJobs/outputs'%opts.outDir)
+os.system('mkdir -p %s/SignalFitJobs/outputs'%opts.outDir)
 print ('mkdir -p %s/SignalFitJobs/outputs'%opts.outDir)
 counter=0
-refProcOpt = ""
-refTagOpt = ""
 indirOpt = ""
 
-if opts.refProc:
-    refProcOpt = " --refProc "+str(opts.refProc)
-if opts.refTag:
-    refTagOpt = " --refTag "+str(opts.refTag)
 if opts.indir:
     indirOpt = " --indir "+str(opts.indir)
 
+print "Generating rootfilenames for shifted masses"
+fileliststring = ""
+for filename125 in opts.infile.split(","):
+    for m in opts.massList.split(","):
+        filename=filename125.replace("_125.root","_"+m+".root")
+        if fileliststring!="":
+            fileliststring+=","+filename
+        else:
+            fileliststring+=filename
+    
+print "--> here is the list: "+fileliststring
+
 for proc in  opts.procs.split(","):
+
+  refProcOpt = ""
+  if opts.refProc!="":
+    refProcOpt = " --refProc "+str(opts.refProc)
+
+  refTagOpt = ""
+  if opts.refTag!="":
+    refTagOpt = " --refTag "+str(opts.refTag)
+
+  #auto find reference proc if not provided yet
+  if opts.refProc=="" and opts.refTag=="":
+    for myrefproc in replacement_dictionary:
+      if myrefproc in proc:
+        referenceproc=replacement_dictionary[myrefproc][0]+opts.year
+        refProcOpt = " --refProc "+referenceproc
+        refTagOpt = " --refTag "+replacement_dictionary[myrefproc][1]
+        print "automatic replacement proc,tag is "+referenceproc+","+replacement_dictionary[myrefproc][1] 
+        break
+
   for cat in opts.flashggCats.split(","):
     print "job ", counter , " - ", proc, " - ", cat
-    file = open('%s/SignalFitJobs/sub%d.sh'%(opts.outDir,counter),'w')
-    writePreamble(file)
+    scriptname=('%s/SignalFitJobs/sub%d.sh'%(opts.outDir,counter))
+    scriptfile = open(scriptname,'w')
+    #print "[INFO] writing preamble"
+    scriptfile.write('#!/bin/bash\n')
+    scriptfile.write('cd %s\n'%os.getcwd())
+    scriptfile.write('eval `scramv1 runtime -sh`\n')
+    scriptfile.write('number=$RANDOM\n')
+    scriptfile.write('mkdir -p scratch_$number\n')
+    scriptfile.write('cd scratch_$number\n')
     counter =  counter+1
     bsRW=0
     if (float(opts.bs)==0):
       bsRW=0
     else:
       bsRW=1
-    exec_line = "%s/bin/SignalFit --verbose 0 -i %s -d %s/%s  --mhLow=%s --mhHigh=%s -s %s/%s --procs %s -o  %s/%s -p %s/%s -f %s --changeIntLumi %s --binnedFit 1 --nBins 320 --split %s,%s --beamSpotReweigh %d --dataBeamSpotWidth %f --massList %s --useDCBplusGaus %s --useSSF %s %s %s %s" %(os.getcwd(), opts.infile,os.getcwd(),opts.datfile,opts.mhLow, opts.mhHigh, os.getcwd(),opts.systdatfile, opts.procs,os.getcwd(),opts.outfilename.replace(".root","_%s_%s.root"%(proc,cat)), os.getcwd(),opts.outDir, opts.flashggCats ,opts.changeIntLumi, proc,cat,bsRW,float(opts.bs), opts.massList, opts.useDCB_1G, opts.useSSF,refProcOpt,refTagOpt,indirOpt)
-    print exec_line
-    writePostamble(file,exec_line)
+    exec_line = "%s/bin/SignalFit --verbose 0 -i %s -d %s/%s  --mhLow=%s --mhHigh=%s -s %s/%s --procs %s -o  %s/%s -p %s/%s -f %s --changeIntLumi %s --binnedFit 1 --nBins 320 --split %s,%s --beamSpotReweigh %d --dataBeamSpotWidth %f --massList %s --useDCBplusGaus %s --useSSF %s %s %s %s" %(os.getcwd(), fileliststring,os.getcwd(),opts.datfile,opts.mhLow, opts.mhHigh, os.getcwd(),opts.systdatfile, opts.procs,os.getcwd(),opts.outfilename.replace(".root","_%s_%s.root"%(proc,cat)), os.getcwd(),opts.outDir, opts.flashggCats ,opts.changeIntLumi, proc,cat,bsRW,float(opts.bs), opts.massList, opts.useDCB_1G, opts.useSSF,refProcOpt,refTagOpt,indirOpt)
+    #print exec_line
+    #print "[INFO] writing to postamble"
+    scriptfile.write('\t echo "PREPARING TO RUN "\n')
+    scriptfile.write('\t touch %s.run\n'%os.path.abspath(scriptname))
+    scriptfile.write('if ( %s ) then\n'%exec_line)
+    #scriptfile.write('\t mv higgsCombine*.root %s\n'%os.path.abspath(opts.outDir))
+    scriptfile.write('\t echo "DONE" \n')
+    scriptfile.write('\t touch %s.done\n'%os.path.abspath(scriptname))
+    scriptfile.write('else\n')
+    scriptfile.write('\t echo "FAIL" \n')
+    scriptfile.write('\t touch %s.fail\n'%os.path.abspath(scriptname))
+    scriptfile.write('fi\n')
+    scriptfile.write('cd -\n')
+    scriptfile.write('\t echo "RM RUN "\n')
+    scriptfile.write('rm -f %s.run\n'%os.path.abspath(scriptname))
+    scriptfile.write('rm -rf scratch_$number\n')
+    scriptfile.close()
+    os.system('chmod +x %s'%os.path.abspath(scriptname))
+    if opts.runLocal:
+      os.system('bash %s > %s.log'%(os.path.abspath(scriptname),os.path.abspath(scriptname)))
+    elif opts.queue:
+      os.system('rm -f %s.done'%os.path.abspath(scriptname))
+      os.system('rm -f %s.fail'%os.path.abspath(scriptname))
+      os.system('rm -f %s.log'%os.path.abspath(scriptname))
+      os.system('rm -f %s.err'%os.path.abspath(scriptname))
 
-if (opts.batch == "LSF") : 
-  print("writing .sub file")
-  condorsub = open(os.path.abspath(file.name)+".sub",'w')
-  condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
-  condorsub.write("executable            = $(scriptname)\n")
-  condorsub.write("output                = $(scriptname).out\n")
-  condorsub.write("error                 = $(scriptname).err\n")
-  condorsub.write("log                   = $(scriptname).log\n")
-  condorsub.write('+JobFlavour           = "'+opts.queue+'"\n')
-  condorsub.write("queue scriptname matching %s/SignalFitJobs/sub*.sh"%opts.outDir)
-  condorsub.close()
-  system("condor_submit "+os.path.abspath(file.name)+".sub")
+print("writing .sub file")
+condorsubname = os.path.abspath('%s/SignalFitJobs/condorsub.sub'%opts.outDir)
+condorsub = open(condorsubname,'w')
+condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
+condorsub.write("executable            = $(scriptname)\n")
+condorsub.write("output                = $(scriptname).out\n")
+condorsub.write("error                 = $(scriptname).err\n")
+condorsub.write("log                   = $(scriptname).log\n")
+condorsub.write('+JobFlavour           = "'+opts.queue+'"\n')
+condorsub.write("queue scriptname matching %s/SignalFitJobs/sub*.sh"%opts.outDir)
+condorsub.close()
+print("condor_submit "+condorsubname)
+os.system("condor_submit "+condorsubname)

@@ -107,7 +107,7 @@ void OptionParser(int argc, char *argv[]){
    string fullFilename_ = "";
 	if( !(dirnameStr_.empty()) ){
       for (int iname =0 ; iname < filenameVector_.size() ; iname++){
-        		dirfilename_.push_back(dirnameStr_+"/"+filenameVector_[iname]+".root");
+	dirfilename_.push_back(dirnameStr_+"/"+filenameVector_[iname]);
 	   }
       for (int iname =0 ; iname < dirfilename_.size() ; iname++){
         if (iname<(dirfilename_.size()-1)) fullFilename_=fullFilename_+dirfilename_[iname]+",";
