@@ -7,8 +7,8 @@ from math import sqrt
 import json
 
 date = '06_05_2019'
-filename = '/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_2016_2017_merged.root'
-filename_bkg = '/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Background/CMS-HGG_multipdf_HHbbgg_2016_2017_13_06_2019.root'
+filename = '/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_2016_2017_26_06_2019.root'
+filename_bkg = '/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Background/CMS-HGG_multipdf_HHbbgg_2016_2017_26_06_2019.root'
 wsname = 'wsig_13TeV'
 wsname_bkg = 'multipdf'
 
@@ -116,6 +116,7 @@ filename_bkg_2016 = '/eos/user/f/fmonti/HHbbgg_run2/workspaces/2016/TAGSORTER_HH
 filename_bkg_2017 = '/eos/user/f/fmonti/HHbbgg_run2/workspaces/2017/TAGSORTER_HHwithttHkiller_ttHlep_ttHhad/output_DoubleEG_spigazzi-RunIIFall17-3_2_0-RunIIFall17-3_2_0-v0-Run2017.root'
 filename_bkg_total = '/eos/user/f/fmonti/HHbbgg_run2/workspaces/output_DoubleEG_2016_2017_v2.root'
 years=['2016','2017','Total']
+catnames=["Data_13TeV_DoubleHTag_0","Data_13TeV_DoubleHTag_1","Data_13TeV_DoubleHTag_2","Data_13TeV_DoubleHTag_3","Data_13TeV_DoubleHTag_4","Data_13TeV_DoubleHTag_5","Data_13TeV_DoubleHTag_6","Data_13TeV_DoubleHTag_7","Data_13TeV_DoubleHTag_8","Data_13TeV_DoubleHTag_9","Data_13TeV_DoubleHTag_10","Data_13TeV_DoubleHTag_11","Data_13TeV_TTHHadronicTag_0","Data_13TeV_TTHHadronicTag_1","Data_13TeV_TTHHadronicTag_2","Data_13TeV_TTHLeptonicTag_0","Data_13TeV_TTHLeptonicTag_1"]
 print 'Data with blinded 115 < Mgg < 135'
 for num,name in enumerate([filename_bkg_2016,filename_bkg_2017,filename_bkg_total]):
 	tfile = TFile(name)
@@ -124,8 +125,7 @@ for num,name in enumerate([filename_bkg_2016,filename_bkg_2017,filename_bkg_tota
 	sum_bkg=0.
 	print 'Data %s\t'%years[num],
 	entries_per_cat['Data'+years[num]] = [] 
-	for cat in range(0,num_cat):
-		catname = 'Data_13TeV_DoubleHTag_%d'%(cat)
+	for catname in catnames:
 		entries = ws_bkg.data(catname).sumEntries()
 		entries_blinded=0
 		for event in range(0,ws_bkg.data(catname).numEntries()):
@@ -137,8 +137,6 @@ for num,name in enumerate([filename_bkg_2016,filename_bkg_2017,filename_bkg_tota
 		print '%d\t'%(entries_blinded),'%s'%symbol,
 		entries_per_cat['Data'+years[num]].append(entries_blinded)
 	print '%d\t'%(sum_bkg)
-
-
 
 result = open("full_yields_%s.txt"%date,"w")
 result.write(json.dumps(entries_per_cat))

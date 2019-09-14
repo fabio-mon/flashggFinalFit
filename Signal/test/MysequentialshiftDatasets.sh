@@ -1,6 +1,6 @@
 #!/bin/sh
 
-YEAR="2016"
+YEAR="2018"
 INDIR=""
 OUTDIR=""
 procs=("ggh" "hh" "qqh" "vh" "tth")

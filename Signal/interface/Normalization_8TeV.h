@@ -24,6 +24,7 @@ class Normalization_8TeV {
 	int Init(int sqrtS);
 	
 	double GetBR(double);
+	double GetBR(double mass, TString proc);
 	// double GetBR(int);
 	double GetXsection(double,TString);
 	double GetXsection(double);
@@ -40,6 +41,7 @@ class Normalization_8TeV {
 
 	TGraph * GetSigmaGraph(TString process);
 	TGraph * GetBrGraph();
+	TGraph * GetBrGraph(TString proc);
 	
 	std::map<int,std::pair<TString,double > > & SignalType() { return SignalTypeMap; }
  private:

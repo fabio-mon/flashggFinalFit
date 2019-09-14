@@ -192,7 +192,7 @@ RooDataSet * rvwvDataset(RooDataSet *data0, string rvwv){
 int main(int argc, char *argv[]){
 
   // Criteria to choose #gauss
-  int   minNevts    = 500; // if below minNevts #gauss = -1  
+  int   minNevts    = 1200; // if below minNevts #gauss = -1  
   //  float myThresholdDist = 0.8; // how much better n+1 has to be wrt n
   float myThresholdDist = 0.8; // how much better n+1 has to be wrt n
   //  float myThresholdChi2 = 0.5; // how much better n+1 has to be wrt n

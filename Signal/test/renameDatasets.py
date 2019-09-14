@@ -8,10 +8,14 @@ import os
 parser = OptionParser(option_list=[
     make_option("--inp-files",type='string',dest='inp_files',default='GluGluToHHTo2B2G_node_SM_13TeV-madgraph,GluGluHToGG_M-125_13TeV_powheg_pythia8,VBFHToGG_M-125_13TeV_powheg_pythia8,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8,ttHToGG_M125_13TeV_powheg_pythia8'),
     #make_option("--target-names",type='string',dest='target_names',default=''),
-    make_option("--inp-dir",type='string',dest="inp_dir",default='/eos/user/f/fmonti/HHbbgg_run2/workspaces/2017/TAGSORTER_HHwithttHkiller_ttHlep_ttHhad/'),
+    make_option("--inp-dir",type='string',dest="inp_dir",default='/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/'),
     make_option("--year",type='string',dest="year",default='2017'),
-    make_option("--out-dir",type='string',dest="out_dir",default='/eos/user/f/fmonti/HHbbgg_run2/workspaces/2017/TAGSORTER_HHwithttHkiller_ttHlep_ttHhad/renamed_v2/'),
-    make_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHLeptonicTag_0,TTHLeptonicTag_1,ZHLeptonicTag,WHLeptonicTag,VHLeptonicLooseTag,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,VBFTag_0,VBFTag_1,VBFTag_2,VHMetTag,VHHadronicTag,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3'),])
+    make_option("--out-dir",type='string',dest="out_dir",default='/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/renamed/'),
+
+#new dev_legacy_runII cats
+    make_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,VHHadronicTag,VHLeptonicLooseTag,VHMetTag,WHLeptonicTag,ZHLeptonicTag'),])
+#old HH branch
+#    make_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHLeptonicTag_0,TTHLeptonicTag_1,ZHLeptonicTag,WHLeptonicTag,VHLeptonicLooseTag,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,VBFTag_0,VBFTag_1,VBFTag_2,VHMetTag,VHHadronicTag,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3'),])
     #make_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11'),])
 
 (options, args) = parser.parse_args()

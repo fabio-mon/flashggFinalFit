@@ -716,7 +716,7 @@ int main(int argc, char* argv[]){
 	int mhLow;
 	int mhHigh;
 	int sqrts;
-	float intLumi;
+	float intLumi,intLumi2016,intLumi2017,intLumi2018;
 	double mhvalue_;
 	int isFlashgg_ =1;
 	string flashggCatsStr_;
@@ -747,12 +747,14 @@ int main(int argc, char* argv[]){
 		("mhHigh,H", po::value<int>(&mhHigh)->default_value(180),														"End point for scan")
 		("mhVal", po::value<double>(&mhvalue_)->default_value(125.),														"Choose the MH for the plots")
 		("higgsResolution", po::value<double>(&higgsResolution_)->default_value(1.),															"Starting point for scan")
-		("intLumi", po::value<float>(&intLumi)->default_value(0.),																"What intLumi in fb^{-1}")
+		("intLumi2016", po::value<float>(&intLumi2016)->default_value(0.),																"What intLumi 2016 in fb^{-1}")
+		("intLumi2017", po::value<float>(&intLumi2017)->default_value(0.),																"What intLumi 2017 in fb^{-1}")
+		("intLumi2018", po::value<float>(&intLumi2018)->default_value(0.),																"What intLumi 2018 in fb^{-1}")
 		("sqrts,S", po::value<int>(&sqrts)->default_value(8),																"Which centre of mass is this data from?")
 		("isFlashgg",  po::value<int>(&isFlashgg_)->default_value(1),  								    	        "Use Flashgg output ")
 		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,TTHHadronicTag,TTHLeptonicTag,VHHadronicTag,VHTightTag,VHLooseTag,VHEtTag"),       "Flashgg category names to consider")
-		("signalName", po::value<string>(&signalNameStr_)->default_value("GluGluToHHTo2B2G_node_SM_13TeV_madgraph,GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017"),       "Signal Name")
-		("singleHiggsNames", po::value<string>(&singleHiggsNamesStr_)->default_value("ttHToGG_M125_13TeV_powheg_pythia8_v2,GluGluHToGG_M_125_13TeV_powheg_pythia8,VBFHToGG_M_125_13TeV_powheg_pythia8,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8,GluGluHToGG_M_125_13TeV_powheg_pythia8_2017,VBFHToGG_M_125_13TeV_powheg_pythia8_2017,ttHToGG_M125_13TeV_powheg_pythia8_2017,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017"),       "Signal Name")
+		("signalName", po::value<string>(&signalNameStr_)->default_value("hh2016,hh2017,hh2018"),       "Signal Name")
+		("singleHiggsNames", po::value<string>(&singleHiggsNamesStr_)->default_value("tth2016,ggh2016,qqh2016,vh2016,tth2017,ggh2017,qqh2017,vh2017,tth2018,ggh2018,qqh2018,vh2018"),       "Signal Name")
 		("verbose,v", 																																			"Verbose");
 	;
 	po::variables_map vm;
@@ -772,7 +774,9 @@ int main(int argc, char* argv[]){
 	split(flashggCats_,flashggCatsStr_,boost::is_any_of(","));
 	split(singleHiggsNames_,singleHiggsNamesStr_,boost::is_any_of(","));
 	split(signalName_,signalNameStr_,boost::is_any_of(","));
-  lumi_13TeV =Form("%.1f fb^{-1}",intLumi);	
+	intLumi=intLumi2016+intLumi2017+intLumi2018;
+	lumi_13TeV =Form("%.1f fb^{-1}",intLumi);
+	
 	system(Form("mkdir -p %s",outDir.c_str()));
 	if (makeCrossCheckProfPlots) system(Form("mkdir -p %s/normProfs",outDir.c_str()));
 
@@ -1087,10 +1091,18 @@ int main(int argc, char* argv[]){
 				std::cout << "Normalization bbgg "<< normalization_bbgg<<std::endl;
 				normalization_bbgg += ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",signalName_[0].c_str(),catname.c_str())))->getVal()*35.9*1000.;
 				std::cout << "Normalization bbgg "<< normalization_bbgg<<std::endl;
-				for (unsigned int pdf_num=0;pdf_num<singleHiggsNames_.size();pdf_num++) {
-					double intLumiYear = 35.9;
-				   if (singleHiggsNames_[pdf_num].find("2017") != string::npos) intLumiYear=41.5;  
-					double singleHiggs_norm_term = ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",singleHiggsNames_[pdf_num].c_str(),catname.c_str())))->getVal()*intLumiYear*1000.;
+				for (unsigned int pdf_num=0;pdf_num<singleHiggsNames_.size();pdf_num++) 
+				{
+				  double intLumiYear=1.;
+				  if (singleHiggsNames_[pdf_num].find("2016") != string::npos) 
+				    intLumiYear = intLumi2016;
+				  else
+				    if (singleHiggsNames_[pdf_num].find("2017") != string::npos) 
+				      intLumiYear = intLumi2017;
+				    else 
+				      if (singleHiggsNames_[pdf_num].find("2018") != string::npos) 
+					intLumiYear = intLumi2018;
+				  double singleHiggs_norm_term = ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",singleHiggsNames_[pdf_num].c_str(),catname.c_str())))->getVal()*intLumiYear*1000.;
 					normalization_singleHiggs+=singleHiggs_norm_term;
 				 	std::cout << "Normalization single Higgs "<< singleHiggsNames_[pdf_num].c_str() << singleHiggs_norm_term<<"  "<<intLumiYear << std::endl;
 				}

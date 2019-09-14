@@ -1,12 +1,12 @@
 #!/bin/sh
-doFTEST=0
-doFIT=1
+doFTEST=1
+doFIT=0
 doPACKAGER=0
 doCALCPHOSYST=0
-YEAR="2016"
-LABEL="12_8_2019_newNaming2"
+YEAR="2017"
+LABEL="12_8_2019_newNaming2_aux"
 LABEL="${LABEL}_year${YEAR}"
-DEFAULTQUEUE="workday"
+DEFAULTQUEUE="microcentury"
 #DEFAULTQUEUE="culo"
 CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,VHHadronicTag,VHLeptonicLooseTag,VHMetTag,WHLeptonicTag,ZHLeptonicTag"
 PROCS=("ggh" "hh" "qqh" "vh" "tth")
@@ -17,13 +17,13 @@ INTLUMI=1.
 INDIR=""
 if   [ $YEAR == 2016 ]; then
     INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v3/"
-    INTLUMI=41.5
+    INTLUMI=38 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 elif [ $YEAR == 2017 ]; then
     INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v3/"
-    INTLUMI=77.4
+    INTLUMI=45 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 elif [ $YEAR == 2018 ]; then
     INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v3/"
-    INTLUMI=63
+    INTLUMI=63 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 fi
 
 #create INFILESTRING and PROCSTRING
@@ -91,8 +91,8 @@ if [ $doFTEST -gt 0 ]; then
     echo "Running Signal F-Test"
     echo "-->Determine Number of gaussians"
     echo "=============================="
-    echo "./python/submitSignaFTest.py --procs $PROCSTRING --flashggCats $CATS --outDir $OUTDIR -i $INFILESTRING --indir $INDIR -q $DEFAULTQUEUE $runLocal"
-    ./python/submitSignaFTest.py --procs $PROCSTRING --flashggCats $CATS --outDir $OUTDIR -i $INFILESTRING --indir $INDIR -q $DEFAULTQUEUE $runLocal
+    echo "./MysubmitSignalFTest.py --procs $PROCSTRING --flashggCats $CATS --outDir $OUTDIR -i $INFILESTRING --indir $INDIR -q $DEFAULTQUEUE $runLocal"
+    ./MysubmitSignalFTest.py --procs $PROCSTRING --flashggCats $CATS --outDir $OUTDIR -i $INFILESTRING --indir $INDIR -q $DEFAULTQUEUE $runLocal
 #    return 1
     LOOP=1
     while (( $LOOP == 1 )) ; do
@@ -149,8 +149,8 @@ if [ $doFIT -gt 0 ]; then
     REFTAGOPT="--refTag $REFTAG"
   fi
 
-  echo "./python/submitSignalFit.py --indir $INDIR -i $INFILESTRING -d ${CONFIGDAT} --mhLow=120 --mhHigh=130 --procs $PROCSTRING -s $PHOTONSYSTFILE --changeIntLumi ${INTLUMI} $REFPROCOPT $REFTAGOPT -p $OUTDIR/sigfit  --q "$DEFAULTQUEUE"  -f $CATS  -o ${OUTDIR}/CMS-HGG_sigfit_${LABEL}.root $runLocal -y $YEAR"
-  ./python/submitSignalFit.py --indir $INDIR -i $INFILESTRING -d ${CONFIGDAT} --mhLow=120 --mhHigh=130 --procs $PROCSTRING -s $PHOTONSYSTFILE --changeIntLumi ${INTLUMI} $REFPROCOPT $REFTAGOPT -p $OUTDIR/sigfit  -q "$DEFAULTQUEUE"  -f $CATS  -o ${OUTDIR}/CMS-HGG_sigfit_${LABEL}.root $runLocal -y $YEAR
+  echo "./MysubmitSignalFit.py --indir $INDIR -i $INFILESTRING -d ${CONFIGDAT} --mhLow=120 --mhHigh=130 --procs $PROCSTRING -s $PHOTONSYSTFILE --changeIntLumi ${INTLUMI} $REFPROCOPT $REFTAGOPT -p $OUTDIR/sigfit  --q "$DEFAULTQUEUE"  -f $CATS  -o ${OUTDIR}/CMS-HGG_sigfit_${LABEL}.root $runLocal -y $YEAR"
+  ./MysubmitSignalFit.py --indir $INDIR -i $INFILESTRING -d ${CONFIGDAT} --mhLow=120 --mhHigh=130 --procs $PROCSTRING -s $PHOTONSYSTFILE --changeIntLumi ${INTLUMI} $REFPROCOPT $REFTAGOPT -p $OUTDIR/sigfit  -q "$DEFAULTQUEUE"  -f $CATS  -o ${OUTDIR}/CMS-HGG_sigfit_${LABEL}.root $runLocal -y $YEAR
 
   echo "python mergeWorkspaces.py ${OUTDIR}/CMS-HGG_sigfit_${LABEL}_${DATE}.root ${OUTDIR}/CMS-HGG_sigfit_*.root"
 fi

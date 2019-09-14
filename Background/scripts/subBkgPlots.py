@@ -9,7 +9,9 @@ parser.add_option("-c","--cats",type="int",help="Number of categories to run")
 parser.add_option("-f","--flashggCats",help="flashggCats : UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,UntaggedTag_4,VBFTag_0,VBFTag_1,VBFTag_2,TTHHadronicTag,TTHLeptonicTag,VHHadronicTag,VHTightTag,VHLooseTag,VHEtTag")
 parser.add_option("-l","--catLabels",default="mk_default",help="Category labels (comma separated) default will use Category %cat")
 parser.add_option("-S","--sqrts",type='int',default=8,help="Sqrt(S) COM energy for finding strings etc")
-parser.add_option("--intLumi",type='float',default=0.,help="integrated lumi")
+parser.add_option("--intLumi2016",type='float',default=0.,help="integrated lumi 2016")
+parser.add_option("--intLumi2017",type='float',default=0.,help="integrated lumi 2017")
+parser.add_option("--intLumi2018",type='float',default=0.,help="integrated lumi 2018")
 parser.add_option("-H","--high",type='int',default=100,help="Sqrt(S) COM energy for finding strings etc")
 parser.add_option("-L","--low",type='int',default=180,help="Sqrt(S) COM energy for finding strings etc")
 parser.add_option("--isMultiPdf",default=False,action="store_true",help="Use for multipdf workspaces")
@@ -60,8 +62,10 @@ for cat in range(ncats):
   execLine = '$CMSSW_BASE/src/flashggFinalFit/Background/bin/makeBkgPlots -f %s -b %s -o %s/BkgPlots_cat%d.root -d %s -c %d -l \"%s\"'%(options.flashggCats,options.bkgfilename,options.outDir,cat,options.outDir,cat,options.catLabels[cat])
 #  execLine = '$PWD -b %s -s %s -o %s/BkgPlots_cat%d.root -d %s -c %d -l \"%s\"'%(options.bkgfilename,options.sigfilename,options.outDir,cat,options.outDir,cat,options.catLabels[cat])
   execLine += " --sqrts %d "%options.sqrts
-  execLine += " --intLumi %f "%options.intLumi
-  print "LC DEBUG echo intlumi ",options.intLumi
+  execLine += " --intLumi2016 %f "%options.intLumi2016
+  execLine += " --intLumi2017 %f "%options.intLumi2017
+  execLine += " --intLumi2018 %f "%options.intLumi2018
+  print "LC DEBUG echo intlumi "+str(options.intLumi2016)+" + "+str(options.intLumi2017)+" + "+str(options.intLumi2018)
   if options.doBands:
     execLine += ' --doBands --massStep %5.3f --nllTolerance %5.3f -L %d -H %d'%(options.massStep,options.nllTolerance,options.low,options.high)
   if options.higgsResolution:

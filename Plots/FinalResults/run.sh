@@ -1,10 +1,11 @@
-DATE="26_06_2019"
+DATE="12_08_2019_v4onlyttHassignal"
 OUTPUTDIR="output/"
-#OUTTAG="_SMgenerated_"$DATE
+OUTTAG="_output_"$DATE
 SYSTEMATICS=""
 c=""
 OUTTAG="_SM_"${DATE}${SYSTEMATICS}
-DATACARD="/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Datacard/mydatacard.txt"
+#DATACARD="/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Datacard/mydatacard_12_8_2019_newNaming2_allyears_ttHinBKG.txt"
+DATACARD="/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Datacard/mydatacard_12_8_2019_newNaming2_allyears_v4onlyttHassignal.txt"
 
 if [[ "$SYSTEMATICS" == "_systematics" ]]; then
     combine $DATACARD -n $OUTTAG -M Asymptotic -m 125.00 --cminDefaultMinimizerType=Minuit2 -L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisGBRLikelihood.so   --run=blind -t -1 --rRelAcc 0.001
