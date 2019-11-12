@@ -14,6 +14,16 @@ process_map = { "GluGluHToGG":"ggh",
 		"ttHToGG":"tth",
 		"Data_13TeV":"Data_13TeV"}
 
+#temporary to be removed
+process_map = { "ggh":"ggh",
+		"hh":"hh",
+		"qqh":"qqh",
+		"vh":"vh",
+		"tth":"tth",
+		"tth":"tth",
+		"Data_13TeV":"Data_13TeV"}
+
+
 #parse arguments
 parser = OptionParser()
 parser.add_option("-i", "--infilename",  action="store",      type="str", dest="infilename",                         help="input file name")

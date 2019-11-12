@@ -1,14 +1,14 @@
 
-SOMEINPUTFILE='/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v3/ggh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v3/hh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v3/qqh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v3/tth2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v3/vh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v3/ggh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v3/hh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v3/qqh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v3/tth2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v3/vh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v3/ggh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v3/hh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v3/qqh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v3/tth2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v3/vh2016_13TeV_125.root'
+SOMEINPUTFILE='/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/ggh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/hh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/qqh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/tth2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/vh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/ggh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/hh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/qqh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/tth2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/vh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/ggh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/hh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/qqh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/tth2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/vh2016_13TeV_125.root'
 
 #for simplicity one single rootfile with all the 3 years !!!
-SIGNALFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/out_fit_12_8_2019_newNaming2_allyears.root'
+SIGNALFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_25_9_2019_newNaming2_newHHBR_allyears.root'
 
 #SMSIGNAL='hh2016,hh2017,hh2018'
 SMSIGNAL='tth2016,tth2017,tth2018'
 #SMSIGNAL='hh2016,hh2017,hh2018,tth2016,tth2017,tth2018'
 
-DATAFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Background/CMS-HGG_multipdf_HHbbgg_allyears_12_08_2019.root'
+DATAFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Background/CMS-HGG_multipdf_HHbbgg_allyears_25_9_2019_newNaming2_newHHBR.root'
 
 #PROCS='ggh2017,qqh2017,tth2017,vh2017,ggh2018,qqh2018,tth2018,vh2018,ggh2016,qqh2016,tth2016,vh2016'
 PROCS='ggh2017,qqh2017,hh2017,vh2017,ggh2018,qqh2018,hh2018,vh2018,ggh2016,qqh2016,hh2016,vh2016'
@@ -25,7 +25,7 @@ INTLUMI2016=27.89
 INTLUMI2017=41.00 
 INTLUMI2018=38.79
 
-OUTPUTDATACARD="./mydatacard_12_8_2019_newNaming2_allyears_v4onlyttHassignal.txt"
+OUTPUTDATACARD="./mydatacard_25_9_2019_newNaming2_newHHBR_allyears_onlyTTHsignal.txt"
 
 echo ./makeParametricModelDatacardFLASHgg.py \
 -i $SOMEINPUTFILE \

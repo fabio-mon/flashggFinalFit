@@ -1,10 +1,10 @@
 #!/bin/sh
-doFTEST=1
-doFIT=0
+doFTEST=0
+doFIT=1
 doPACKAGER=0
 doCALCPHOSYST=0
-YEAR="2017"
-LABEL="12_8_2019_newNaming2_aux"
+YEAR="2018"
+LABEL="25_9_2019_newNaming2_newHHBR"
 LABEL="${LABEL}_year${YEAR}"
 DEFAULTQUEUE="microcentury"
 #DEFAULTQUEUE="culo"
@@ -16,13 +16,13 @@ INTLUMI=1.
 
 INDIR=""
 if   [ $YEAR == 2016 ]; then
-    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v3/"
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/"
     INTLUMI=38 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 elif [ $YEAR == 2017 ]; then
-    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v3/"
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/"
     INTLUMI=45 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 elif [ $YEAR == 2018 ]; then
-    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v3/"
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/"
     INTLUMI=63 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 fi
 

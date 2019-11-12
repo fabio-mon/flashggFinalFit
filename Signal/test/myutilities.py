@@ -18,6 +18,7 @@ def longestSubstringFinder(string1, string2):
                 match = ""
     return answer
 
+#dataset names are always <somestuff_or_void><processname>_<otherstuff> and the only common substring between all the categories is <processname>
 def inferprocessname(infilename,wsname="tagsDumper/cms_hgg_13TeV"):
     infile = TFile(infilename)
     ws = infile.Get(wsname)
