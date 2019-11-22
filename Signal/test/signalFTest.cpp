@@ -75,17 +75,17 @@ void OptionParser(int argc, char *argv[]){
   desc1.add_options()
     ("help,h",                                                                                "Show help")
     ("infilename,i", po::value<string>(&filename_),                                           "Input file name")
-	("indir", po::value<string>(&dirnameStr_),                                           			"Input file dir name")
+    ("indir,", po::value<string>(&dirnameStr_),                                                "Input file dir name")
     ("datfilename,d", po::value<string>(&datfilename_)->default_value("dat/config.dat"),      "Output configuration file")
-    ("outdir,o", po::value<string>(&outdir_)->default_value("plots"),      "Output configuration file")
-    ("json_dict,j", po::value<string>(&json_dict_)->default_value(""),      "Output configuration file")
+    ("outdir,o", po::value<string>(&outdir_)->default_value("plots"),                         "Output configuration file")
+    ("json_dict,j", po::value<string>(&json_dict_)->default_value(""),                        "Output configuration file")
     ("mass,m", po::value<int>(&mass_)->default_value(125),                                    "Mass to run at")
     ("procs,p", po::value<string>(&procString_)->default_value("ggh,vbf,wh,zh,tth"),          "Processes")
-    ("recursive",																																							"Recursive fraction")
-    ("forceFracUnity",																																				"Force fraction unity")
-    ("isFlashgg",	po::value<bool>(&isFlashgg_)->default_value(true),													"Use flashgg format")
-    ("verbose",     po::bool_switch(&verbose_), "verbose")
-    ("unbinnedFit",     po::bool_switch(&unbinnedFit_), "Binned/Unbinned Fit")
+    ("recursive",									      "Recursive fraction")
+    ("forceFracUnity",									      "Force fraction unity")
+    ("isFlashgg",	po::value<bool>(&isFlashgg_)->default_value(true),		      "Use flashgg format")
+    ("verbose",     po::bool_switch(&verbose_),                                               "verbose")
+    ("unbinnedFit",     po::bool_switch(&unbinnedFit_),                                       "Binned/Unbinned Fit")
     ("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,UntaggedTag_4,VBFTag_0,VBFTag_1,VBFTag_2,TTHHadronicTag,TTHLeptonicTag,VHHadronicTag,VHTightTag,VHLooseTag,VHEtTag"),       "Flashgg category names to consider")
     ("considerOnly", po::value<string>(&considerOnlyStr_)->default_value("All"), 
      "If you wish to only consider a subset cat in the list, list them as separated by commas. ")
@@ -107,7 +107,7 @@ void OptionParser(int argc, char *argv[]){
    string fullFilename_ = "";
 	if( !(dirnameStr_.empty()) ){
       for (int iname =0 ; iname < filenameVector_.size() ; iname++){
-        		dirfilename_.push_back(dirnameStr_+"/"+filenameVector_[iname]+".root");
+	dirfilename_.push_back(dirnameStr_+"/"+filenameVector_[iname]);
 	   }
       for (int iname =0 ; iname < dirfilename_.size() ; iname++){
         if (iname<(dirfilename_.size()-1)) fullFilename_=fullFilename_+dirfilename_[iname]+",";
@@ -192,7 +192,7 @@ RooDataSet * rvwvDataset(RooDataSet *data0, string rvwv){
 int main(int argc, char *argv[]){
 
   // Criteria to choose #gauss
-  int   minNevts    = 500; // if below minNevts #gauss = -1  
+  int   minNevts    = 1200; // if below minNevts #gauss = -1  
   //  float myThresholdDist = 0.8; // how much better n+1 has to be wrt n
   float myThresholdDist = 0.8; // how much better n+1 has to be wrt n
   //  float myThresholdChi2 = 0.5; // how much better n+1 has to be wrt n
