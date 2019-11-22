@@ -68,7 +68,7 @@ if opts.queue:
   os.system('rm -f %s.err'%os.path.abspath(scriptname))
   condorsubname=os.path.abspath('%s/fTestJobs/condorsub.sub'%opts.outDir)
   condorsub = open(condorsubname,'w')
-  condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
+  #condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
   condorsub.write("executable            = $(scriptname)\n")
   condorsub.write("output                = $(scriptname).out\n")
   condorsub.write("error                 = $(scriptname).err\n")

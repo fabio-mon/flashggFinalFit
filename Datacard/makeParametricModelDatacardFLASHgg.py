@@ -8,6 +8,8 @@
 ###############################################################################
 import os,sys,copy,math
 import numpy as np
+import shutil
+import json
 ###############################################################################
 
 ###############################################################################
@@ -130,7 +132,10 @@ parser.add_option("--intLumi2017",type="float",default=41.5,help="Integrated Lum
 parser.add_option("--intLumi2018",type="float",default=41.5,help="Integrated Lumi for 2018 (default: %default)")
 parser.add_option("--newGghScheme",default=False,action="store_true",help="Use new WG1 scheme for ggH theory uncertainties" )
 parser.add_option("--doSTXS",default=False,action="store_true",help="Use STXS Stage 0 processes" )
-parser.add_option("--signalProc",default='GluGluToHHTo2B2G_node_SM_13TeV_madgraph,GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017',help="What to consider signal processes" )
+parser.add_option("--signalProc",default='hh_SM_generated_2016,hh_SM_generated_2017,hh_SM_generated_2018',help="What to consider signal processes" )
+parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/kl_kt/',help="hh reweighting directory with all txt files" )
+parser.add_option("--hhReweightSM",default='',help="hh base SM card to start from" )
+parser.add_option("--do_kl_scan",default=False,action="store_true",help="do kl scan?" )
 (options,args)=parser.parse_args()
 allSystList=[]
 if options.submitSelf :
@@ -148,46 +153,39 @@ outFile = open(options.outfilename,'w')
 ###############################################################################
 ## PROCS HANDLING & DICT ######################################################
 ###############################################################################
-# convert flashgg style to combine style process
-#combProc = {'ggH':'ggH_hgg','VBF':'qqH_hgg','ggh':'ggH_hgg','vbf':'qqH_hgg','wzh':'VH','wh':'WH_hgg','zh':'ZH_hgg','tth':'ttH_hgg','bkg_mass':'bkg_mass','gg_grav':'ggH_hgg_ALT','qq_grav':'qqbarH_ALT'}
-#if options.doSTXS: 
-#  combProc = {'GG2H':'ggH_hgg','VBF':'qqH_hgg','TTH':'ttH_hgg','QQ2HLNU':'WH_lep_hgg','QQ2HLL':'ZH_lep_hgg','WH2HQQ':'WH_had_hgg','ZH2HQQ':'ZH_had_hgg','testBBH':'bbH_hgg','testTHQ':'tHq_hgg','testTHW':'tHW_hgg','bkg_mass':'bkg_mass'}
-#flashggProc = {'ggH_hgg':'ggh','qqH_hgg':'vbf','VH':'wzh','WH_hgg':'wh','ZH_hgg':'zh','ttH_hgg':'tth','bkg_mass':'bkg_mass','ggH_hgg_ALT':'gg_grav','qqbarH_ALT':'qq_grav'}
-#if options.doSTXS: 
-#  flashggProc = {'ggH_hgg':'GG2H','qqH_hgg':'VBF','ttH_hgg':'TTH','WH_lep_hgg':'QQ2HLNU','ZH_lep_hgg':'QQ2HLL','WH_had_hgg':'WH2HQQ','ZH_had_hgg':'ZH2HQQ','bbH_hgg':'testBBH','tHq_hgg':'testTHQ','tHW_hgg':'testTHW','bkg_mass':'bkg_mass'}
-#procId = {'ggH_hgg':0,'qqH_hgg':-1,'ttH_hgg':-2,'WH_lep_hgg':-2,'ZH_lep_hgg':-3,'WH_had_hgg':-4,'ZH_had_hgg':-5,'bbH_hgg':-6,'tHq_hgg':-7,'tHW_hgg':-8,'bkg_mass':1}
-#bkgProcs = ['bkg_mass','bbH_hgg','tHq_hgg','tHW_hgg'] #what to treat as background
 
 combProc = { 'bkg_mass':'bkg_mass'}
-
-#allProcs = ["GluGluToHHTo2B2G_node_SM_13TeV_madgraph", "GluGluHToGG_M_125_13TeV_powheg_pythia8", "VBFHToGG_M_125_13TeV_powheg_pythia8","ttHToGG_M125_13TeV_powheg_pythia8_v2","VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8","GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017","GluGluHToGG_M_125_13TeV_powheg_pythia8_2017","VBFHToGG_M_125_13TeV_powheg_pythia8_2017","ttHToGG_M125_13TeV_powheg_pythia8_2017","VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8_2017"]
-allProcs = ["hh2016","ggh2016","qqh2016","tth2016","vh2016","hh2017","ggh2017","qqh2017","tth2017","vh2017","hh2018","ggh2018","qqh2018","tth2018","vh2018"]
+allProcsNames = 'hh_SM,hh_SM_generated,ggh,qqh,tth,vh'.split(',')
+allProcs = []
+for name in allProcsNames:
+   allProcs.append(name+'_2016')
+   allProcs.append(name+'_2017')
+   allProcs.append(name+'_2018')
 
 allNodes=[]
 for proc in allProcs:
    combProc[proc] = proc
+
 #whichNodes = list(np.arange(0,12,1))
 #whichNodes.append('SM')
 #whichNodes.append('box')
 #for node in whichNodes:
-#   proc = 'GluGluToHHTo2B2G_node_%s_13TeV_madgraph'%node
-#   combProc[proc] = proc
-#   allNodes.append(proc)
-#   allProcs.append(proc)
-#   proc = 'GluGluToHHTo2B2G_node_%s_13TeV_madgraph_2017'%node
-#   combProc[proc] = proc
-#   allProcs.append(proc)
-#   allNodes.append(proc)
+#   for y in ['2016','2017','2018']:
+#     proc = 'hh_node_%s_%s'%(node,y)
+#     combProc[proc] = proc
+#     allNodes.append(proc)
+#     allProcs.append(proc)
 
 	
 flashggProc = combProc
 
-
-procId = {"bkg_mass":1,
-          "ggh2016":2, "qqh2016":3, "tth2016":4, "vh2016":5, "hh2016":6,
-          "ggh2017":7, "qqh2017":8, "tth2017":9, "vh2017":10,"hh2017":11,
-          "ggh2018":12,"qqh2018":13,"tth2018":14,"vh2018":15,"hh2018":16}
-#procId = {"bkg_mass":1,"ggh2016":2,"qqh2016":3,"vh2016":5,"ggh2017":6,"qqh2017":7,"vh2017":9,"ggh2018":10,"qqh2018":11,"vh2018":13}
+procId = {'bkg_mass':1}
+procNum=2
+for y in ['2016','2017','2018']:
+  for proc in allProcsNames:
+    if 'hh' not in proc:
+      procId[proc+'_%s'%y]=procNum
+      procNum+=1 
 
 signalProc = options.signalProc.split(',')
 id_num=0
@@ -285,7 +283,7 @@ else: options.globalScalesCorr = options.globalScalesCorr.split(',')
 ###############################################################################
 ## OPEN WORKSPACE AND EXTRACT INFO # ##########################################
 sqrts=13
-print options.infilename
+print 'filename', options.infilename
 inWS = WSTFileWrapper(options.infilename,"tagsDumper/cms_hgg_%sTeV"%sqrts)
 #inWS = inFile.Get('wsig_13TeV')
 #if (inWS==None) : inWS = inFile.Get('tagsDumper/cms_hgg_%sTeV'%sqrts)
@@ -306,15 +304,15 @@ intL2018 = 1000* options.intLumi2018
 file_ext = 'data'
 dataFile = 'CMS-HGG_%s_%dTeV_multipdf.root'%(file_ext,sqrts)
 bkgFile = 'CMS-HGG_%s_%dTeV_multipdf.root'%(file_ext,sqrts)
-dataFile = 'CMS-HGG_multipdf_HHbbgg_data2016_2017_13_12_2018.root'
-#dataFile = 'CMS-HGG_multipdf_HHbbgg_data2017_only_13_12_2018.root'
-#dataFile = 'CMS-HGG_multipdf_HHbbgg_data2016_only_13_12_2018.root'
 dataFile = options.dataFile
 bkgFile = dataFile 
 dataWS = 'multipdf'
 bkgWS = 'multipdf'
 sigFile = options.signalFile
-if options.nodesFile=="" : nodesFile = ['',''] 
+if options.nodesFile=="" : nodesFile = ['','',''] 
+#sigFile = options.signalFile.split(',')[0]
+#sigFiles = options.signalFile.split(',')
+#if options.nodesFile=="" : nodesFile = ['','',''] 
 else : nodesFile = options.nodesFile.split(',')
 #print "making sigfile " ,sigFile
 sigWS = 'wsig_%dTeV'%(sqrts)
@@ -342,11 +340,8 @@ else:
   fileDetails['qqH_hgg']       = [sigFile.replace('$PROC',"vbf"),sigWS,'hggpdfsmrel_%dTeV_vbf_$CHANNEL'%sqrts]
   fileDetails['ttH_hgg']       = [sigFile.replace('$PROC',"tth"),sigWS,'hggpdfsmrel_%dTeV_tth_$CHANNEL'%sqrts]
   for proc in allProcs:
-#      if (proc in allNodes) and ('2017' in proc) : fileDetails[proc] = 	[nodesFile[1],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
-#      elif proc in allNodes : fileDetails[proc] = 	[nodesFile[0],sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
-      if ('2017' in proc) : fileDetails[proc] = 	[sigFile,sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
-      else : fileDetails[proc] = 	[sigFile,sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
-
+      if (proc in allNodes) : fileDetails[proc] =  [nodesFile,sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
+      else:                   fileDetails[proc] =  [sigFile,sigWS,'hggpdfsmrel_%dTeV_%s_$CHANNEL'%(sqrts,proc)]
   if splitVH:
     fileDetails['WH_hgg']      =  [sigFile.replace('$PROC',"wh"),sigWS,'hggpdfsmrel_%dTeV_wh_$CHANNEL'%sqrts]
     fileDetails['ZH_hgg']      =  [sigFile.replace('$PROC',"zh"),sigWS,'hggpdfsmrel_%dTeV_zh_$CHANNEL'%sqrts]
@@ -758,7 +753,7 @@ brSyst_bbgg = [0.02404,-0.02417] #13TeV Values, from YR4 taking  in quadrature T
 # lumi syst
 ####lumiSyst = 0.026 #8TeV Values
 #lumiSyst=0.062  #Correct for ICHEP 
-lumiSyst_2018=0.023#FIXME  
+lumiSyst_2018=0.025  
 lumiSyst_2017=0.023  
 lumiSyst_2016=0.025  
 lumiSyst=0.025  #Correct for Moriond17
@@ -773,12 +768,46 @@ def printBRSyst():
       if '%s:%s'%(p,c) in options.toSkip: continue
       if p in bkgProcs:
         outFile.write('- ')
-      elif 'HHTo2B2G' in p:
+      elif 'hh' in p:
         outFile.write('%5.3f/%5.3f '%(1./(1.-brSyst_bbgg[1]),1.+brSyst_bbgg[0]))
       else:
          outFile.write('%5.3f/%5.3f '%(1./(1.-brSyst[1]),1.+brSyst[0]))
   outFile.write('\n')
   outFile.write('\n')
+
+
+def printReweightingKlKt(years='2016,2017,2018'.split(',')):
+  print '[INFO] kl kt reweighting...'
+  with open(options.hhReweightDir+"config.json","r") as rew_json:
+    rew_dict = json.load(rew_json)
+  for ikl in range(0,rew_dict['Nkl']):
+    kl = rew_dict['klmin'] + ikl*(rew_dict['klmax']-rew_dict['klmin']+1)/rew_dict['Nkl']
+    kl_str = ("{:.6f}".format(kl)).replace('.','d').replace('-','m') 
+    for ikt in range(0,rew_dict['Nkt']):
+      kt = rew_dict['ktmin'] + ikt*(rew_dict['ktmax']-rew_dict['ktmin']+1)/rew_dict['Nkt']
+      kt_str = ("{:.6f}".format(kt)).replace('.','d').replace('-','m') 
+
+      hhcard_name = options.hhReweightSM.replace('.txt','_kl_%s_kt_%s.txt'%(kl_str,kt_str))
+      os.system('cp %s %s'%(options.hhReweightSM,hhcard_name))  
+      outNew = open(hhcard_name,'a')
+      for year in years:
+        rew_values = [] #for 12 cats
+        with open(options.hhReweightDir+"reweighting_%s_kl_%s_kt_%s.txt"%(year,kl_str,kt_str),"r") as rew_values_file:
+          for line in rew_values_file.readlines():
+            rew_values.append(float(line.strip()))
+        for cat_num,c in enumerate(options.cats):
+          for p in options.procs:
+            if '%s:%s'%(p,c) in options.toSkip: continue
+            if (year in p) and (p in signalProc) :
+             rateParamName = 'kl_hh_%dTeV_%s_%s'%(sqrts,c,year)
+             outNew.write('%s  rateParam  '%(rateParamName))
+             outNew.write('%s_13TeV '%(c))
+             outNew.write('%s '%(p))
+             rew = rew_values[cat_num]
+             outNew.write('%.4f '%(rew))
+             outNew.write('\n')
+             outNew.write('nuisance  edit  freeze %s'%(rateParamName))
+             outNew.write('\n')
 
 def printLumiSyst(year='2016'):
   print '[INFO] Lumi...'
@@ -829,7 +858,6 @@ def printUEPSSyst():
     uepsFiles['PS'] = options.uepsfilename.split(',UEPS,')[1].split(',')
     print uepsFiles['PS']
     
-   # tpMap = {'GluGluToHHTo2B2G_node_SM_13TeV_madgraph':'GluGluToHHTo2B2G_node_SM_13TeV_madgraph', "GluGluHToGG_M_125_13TeV_powheg_pythia8":"GluGluHToGG_M_125_13TeV_powheg_pythia8","VBFHToGG_M_125_13TeV_powheg_pythia8":"VBFHToGG_M_125_13TeV_powheg_pythia8" ,"VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8":"VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8","bbHToGG_M_125_4FS_yb2_13TeV_amcatnlo":"bbHToGG_M_125_4FS_yb2_13TeV_amcatnlo","bbHToGG_M_125_4FS_ybyt_13TeV_amcatnlo":"bbHToGG_M_125_4FS_ybyt_13TeV_amcatnlo",'GG2H':'ggh','VBF':'vbf','TTH':'tth','QQ2HLNU':'wh','QQ2HLL':'zh','WH2HQQ':'wh','ZH2HQQ':'zh','bkg_mass':'bkg_mass'}
     tpMap =combProc
     
     lines = {}
@@ -1116,7 +1144,6 @@ def printObsProcBinLines():
         if '2016' in p : outFile.write('%7.1f '%(intL2016*scale))
         if '2017' in p : outFile.write('%7.1f '%(intL2017*scale))
         if '2018' in p : outFile.write('%7.1f '%(intL2018*scale))
-      #  outFile.write('%7.1f '%(intL*scale))
   outFile.write('\n')
   outFile.write('\n')
 ###############################################################################
@@ -1606,6 +1633,13 @@ def printMultiPdf():
 
 print "JustThisSyst == " , options.justThisSyst
 if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
+
+####################################Reweighting kl kt start##################
+  if options.do_kl_scan :
+     printReweightingKlKt(years='2016,2017,2018'.split(','))
+     exit()
+####################################Reweighting kl kt  done##################
+  
   printPreamble()
   #shape systematic files
   printFileOptions()
@@ -1631,6 +1665,7 @@ printFlashggSysts()
 #if (len(dijetCats) > 0 ):  printVbfSysts()
 #other 
 #printLepSysts() #obsolete
+
 
 print "################## all sys list #######################"
 print allSystList

@@ -73,10 +73,10 @@ def add_mc_vars_to_workspace(ws=None, systematics_labels=[],add_benchmarks = Fal
   dZ.setBins(40)
   getattr(ws, 'import')(dZ)
 
- # ttHScore = ROOT.RooRealVar("ttHScore","ttHScore",0.5,0.,1.)
- # ttHScore.setConstant(False)
- # ttHScore.setBins(40)
- # getattr(ws, 'import')(ttHScore)
+  #ttHScore = ROOT.RooRealVar("ttHScore","ttHScore",0.5,0.,1.)
+  #ttHScore.setConstant(False)
+  #ttHScore.setBins(40)
+  #getattr(ws, 'import')(ttHScore)
 
   if add_benchmarks: 
      for benchmark_num in whichNodes:
@@ -121,6 +121,7 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],a
 
   #define argument set  
   arg_set = ROOT.RooArgSet(ws.var("weight"))
+#  variables = ["CMS_hgg_mass","dZ", "ttHScore"] #ttHScore
   variables = ["CMS_hgg_mass","dZ"] #ttHScore
   if add_benchmarks :
      variables.append("benchmark_reweight_%s"%benchmark_num)
@@ -145,9 +146,6 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],a
         ws.var(var).setConstant()
       else : 
         ws.var(var).setVal( row[ var ] )
- #     if( mass == '125' ): ws.var(var).setVal( row[ var_tree ] )
- #     elif( mass == '130' ): ws.var(var).setVal( row[ var_tree ]+5. )
- #     elif( mass == '120' ): ws.var(var).setVal( row[ var_tree ]-5. )
 
     w_val = row['weight']
 
@@ -169,20 +167,19 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],a
 def get_options():
 
     parser = OptionParser()
-    parser.add_option("--inp-files",type='string',dest='inp_files',default='GluGluToHHTo2B2G_nodesPlusSM_13TeV-madgraph')  #2016
-    #parser.add_option("--inp-files",type='string',dest='inp_files',default='VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8,ttHToGG_M125_13TeV_powheg_pythia8_v2,VBFHToGG_M-125_13TeV_powheg_pythia8,GluGluHToGG_M-125_13TeV_powheg_pythia8,GluGluToHHTo2B2G_node_SM_13TeV-madgraph'),  #2016
-    #parser.add_option("--inp-files",type='string',dest='inp_files',default='ttHToGG_M125_13TeV_powheg_pythia8,GluGluHToGG_M-125_13TeV_powheg_pythia8,VBFHToGG_M-125_13TeV_powheg_pythia8,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8,GluGluToHHTo2B2G_node_SM_13TeV-madgraph'), #2017
-    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/06_05_2019/')
-    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/06_05_2019/systematics_nominal/')
+    parser.add_option("--inp-files",type='string',dest='inp_files',default='ggh,qqh,tth,vh')  
+    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/')
+    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/')
     parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
     parser.add_option("--nosysts",action="store_true", dest="nosysts", default=False)
     parser.add_option("--year",type='string',dest="year",default='2016')
     parser.add_option("--add_benchmarks",action="store_true", dest="add_benchmarks",default=False)
-    parser.add_option("--config",type='string',dest="config",default='/work/nchernya/DiHiggs/inputs/25_04_2019/reweighting_normalization_25_04_2019.json')
+    parser.add_option("--config",type='string',dest="config",default='/work/nchernya/DiHiggs/inputs/25_10_2019/reweighting_normalization_19_09_2019.json')
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 
 (opt,args) = get_options()
+year=opt.year
 if opt.nosysts : systematics = ['']
 else : systematics = getSystLabelsWeights()
 mass = '125'
@@ -197,58 +194,67 @@ normalizations = json.loads(normalization_file)
 if opt.add_benchmarks : print 'Adding benchmarks'
 
 for num,f in enumerate(input_files):
-   input_names.append(f.replace('-','_') +'_13TeV') 
-   if 'GluGluToHHTo2B2G_node_SM_13TeV-madgraph' in f and not opt.add_benchmarks:
-      if "2017" in opt.year : 
-          target_names.append(f.replace('-','_') +'_generated_2017_13TeV') 
-          target_files.append('output_' + f + '_generated_2017' )
-      elif "2016" : 
-          target_names.append(f.replace('-','_') +'_generated_13TeV')
-          target_files.append('output_' + f + '_generated' )
+   name=f
+###############Tmp. next time they will all have the same names############
+#   if 'qqh' in f and year=='2016':  name='qqh_amc'  #tmp
+#   if 'ggh' in f and year=='2016':  name='ggh_amc' #tmp
+   if 'hh_SM' in f and not opt.add_benchmarks: name='hh'
+###########################################################################
+   input_names.append(name+year+'_13TeV_125_13TeV')
+   if 'hh' in f and not opt.add_benchmarks:
+      target_names.append(f +'_generated_%s_13TeV'%year) 
+      target_files.append('output_' + f + '_generated_%s'%year )
    else :
-      if '2017' in opt.year : 
-          target_names.append(f.replace('-','_') +'_2017_13TeV')
-          target_files.append('output_' + f +'_2017' )
-      elif '2016' in opt.year : 
-          target_names.append(f.replace('-','_') +'_13TeV')
-          target_files.append('output_' + f )
-   input_files[num] = 'output_' + f 
+      target_names.append(f +'_%s_13TeV'%year)
+      target_files.append('output_' + f +'_%s'%year )
 
-opt.inp_dir = opt.inp_dir + opt.year + '/'
+#opt.inp_dir = opt.inp_dir+'/' + year + '/'
 
 for num,f in enumerate(input_files):
  print 'doing file ',f
- tfile = ROOT.TFile(opt.inp_dir + f+".root")
+ tfile = ROOT.TFile(opt.inp_dir + "output_"+f+"_%s.root"%year)
+ print "file opened"
  if not opt.add_benchmarks : whichNodes = [1]
+ print "loop over nodes" 
  for benchmark_num in whichNodes:
+   print "node ",benchmark_num
    systematics_datasets = [] 
    #define roo fit workspace
+   print "creating workspace"
    ws = ROOT.RooWorkspace("cms_hgg_13TeV", "cms_hgg_13TeV")
    #Assemble roorealvariable set
-   add_mc_vars_to_workspace( ws,systematics[1] )  # do not add them for the main systematics file
-   #add_mc_vars_to_workspace( ws,add_benchmarks=opt.add_benchmarks)
-   for syst in systematics[0] : 
+   #add_mc_vars_to_workspace( ws,systematics[0] )  # do not add them for the main systematics file
+   print "adding variables to the workspace"
+   add_mc_vars_to_workspace( ws,systematics[0],add_benchmarks=opt.add_benchmarks)
+   for syst in [systematics[0]] : 
+      print "doing systematic ",syst 
       for cat in cats : 
          print 'doing cat ',cat
          if syst!='' : name = input_names[num]+'_'+cat+'_'+syst
          else : name = input_names[num]+'_'+cat
+         if 'ggh' in f and year=='2016':  name='GluGluHToGG_M125_13TeV_amcatnloFXFX_pythia8_13TeV_'+cat #tmp
+         print "getting tree ",name," using pandas"
          data = pd.DataFrame(tree2array(tfile.Get("tagsDumper/trees/%s"%name)))
          if syst!='' : 
              newname = target_names[num]+'_'+mass+'_'+cat+'_'+syst
-             if opt.add_benchmarks : newname =  newname.replace('nodesPlusSM','node_%s'%benchmark_num)
+             if opt.add_benchmarks : newname =  newname.replace('hh','hh_node_%s'%benchmark_num)
          else : 
              newname = target_names[num]+'_'+mass+'_'+cat
-             if opt.add_benchmarks : newname =  newname.replace('nodesPlusSM','node_%s'%benchmark_num)
- 
-         if not opt.add_benchmarks : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics[1]) #systemaitcs[1] : this should be done for nominal only, to add weights
-         else : systematics_datasets += add_dataset_to_workspace( data, ws, newname,sysematics[1],add_benchmarks=opt.add_benchmarks,benchmark_num=benchmark_num,benchmark_norm = calculate_benchmark_normalization(normalizations,opt.year,benchmark_num))
+             if opt.add_benchmarks : newname =  newname.replace('hh','hh_node_%s'%benchmark_num)
+         print "newname is ",newname
+         if not opt.add_benchmarks : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics[0]) #systemaitcs[1] : this should be done for nominal only, to add weights
+         else : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics[0],add_benchmarks=opt.add_benchmarks,benchmark_num=benchmark_num,benchmark_norm = calculate_benchmark_normalization(normalizations,year,benchmark_num))
          #print newname, " ::: Entries =", ws.data(newname).numEntries(), ", SumEntries =", ws.data(newname).sumEntries()
- 
-       #  for newmass in masses :
-         for newmass in [] :
+         print "added ",newname," to systematics_datasets"
+         for newmass in masses :
+       #  for newmass in [] :
              value = newmass + int(mass) 
-             if syst!='' : massname = target_names[num]+'_%d_'%value+cat+'_'+syst
-             else : massname = target_names[num]+"_%d_"%value+cat
+             if syst!='' : 
+               massname = target_names[num]+'_%d_'%value+cat+'_'+syst
+               if opt.add_benchmarks : massname =  massname.replace('hh','hh_node_%s'%benchmark_num)
+             else : 
+               massname = target_names[num]+"_%d_"%value+cat
+               if opt.add_benchmarks : massname =  massname.replace('hh','hh_node_%s'%benchmark_num)
              newdataset = (ws.data(newname)).Clone(massname)
              newdataset.changeObservableName("CMS_hgg_mass","CMS_hgg_mass_old")
              oldmass = newdataset.get()["CMS_hgg_mass_old"]
@@ -256,19 +262,19 @@ for num,f in enumerate(input_files):
              newdataset.addColumn(mass_new).setRange(100,180)
              getattr(ws, 'import')(newdataset)
              systematics_datasets += massname
-         
+             print "ending loop over mass"
+         print "ending loop over category"
+      print "ending loop over systematic"
+   
    #export ws to file
-   if not opt.add_benchmarks : 
-      f_out = ROOT.TFile.Open("%s/%s.root"%(opt.out_dir,target_files[num]),"RECREATE")
-      dir_ws = f_out.mkdir("tagsDumper")
-      dir_ws.cd()
-      ws.Write()
-      f_out.Close()
-   else :  
-      f_new_out = f.replace('nodesPlusSM','node_%s'%benchmark_num).replace('_correctedcfg','')
-      if '2017' in opt.year : f_new_out = f_new_out+'_2017' 
-      f_out = ROOT.TFile.Open("%s/%s.root"%(opt.out_dir,f_new_out),"RECREATE")
-      dir_ws = f_out.mkdir("tagsDumper")
-      dir_ws.cd()
-      ws.Write()
-      f_out.Close()
+   outname = target_files[num]
+   if opt.add_benchmarks : 
+      outname = outname.replace('hh','hh_node_%s'%benchmark_num)
+   f_out = ROOT.TFile.Open("%s/%s.root"%(opt.out_dir,outname),"RECREATE")
+   dir_ws = f_out.mkdir("tagsDumper")
+   dir_ws.cd()
+   print "saving output"
+   ws.Write()
+   f_out.Close()
+   print "ending loop over benchmark"
+ print "ending loop over file"

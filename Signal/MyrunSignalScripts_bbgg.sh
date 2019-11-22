@@ -3,26 +3,27 @@ doFTEST=0
 doFIT=1
 doPACKAGER=0
 doCALCPHOSYST=0
-YEAR="2018"
-LABEL="25_9_2019_newNaming2_newHHBR"
+YEAR="2016"
+LABEL="20_11_2019"
 LABEL="${LABEL}_year${YEAR}"
 DEFAULTQUEUE="microcentury"
 #DEFAULTQUEUE="culo"
-CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,VHHadronicTag,VHLeptonicLooseTag,VHMetTag,WHLeptonicTag,ZHLeptonicTag"
-PROCS=("ggh" "hh" "qqh" "vh" "tth")
+CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,THQLeptonicTag,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,VHHadronicTag,VHLeptonicLooseTag,VHMetTag,WHLeptonicTag,ZHLeptonicTag"
+#CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,VHHadronicTag,VHLeptonicLooseTag,VHMetTag,WHLeptonicTag,ZHLeptonicTag"
+PROCS=("ggh" "hh_node_SM" "qqh" "vh" "tth")
 REFTAG=""
 REFPROC=""
 INTLUMI=1.
 
 INDIR=""
 if   [ $YEAR == 2016 ]; then
-    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/"
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2016/"
     INTLUMI=38 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 elif [ $YEAR == 2017 ]; then
-    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/"
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2017/"
     INTLUMI=45 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 elif [ $YEAR == 2018 ]; then
-    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/"
+    INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2018/"
     INTLUMI=63 #the result derived using this value are not considered in any of the following steps, I set it just for consistency
 fi
 
@@ -31,8 +32,10 @@ PROCSTRING=""
 INFILESTRING=""
 for PROC in "${PROCS[@]}"
 do
-    PROCNAME="${PROC}${YEAR}"
-    INFILENAME="${PROC}${YEAR}_13TeV_125.root"
+    PROCNAME="${PROC}_${YEAR}"
+    #INFILENAME="${PROC}${YEAR}_13TeV_125.root"
+    #INFILENAME="output_${PROC}_${YEAR}"
+    INFILENAME="${PROC}_${YEAR}.root"
     if [ "$PROCSTRING" != "" ]; then
 	PROCSTRING="${PROCSTRING},"
 	INFILESTRING="${INFILESTRING},"
@@ -44,6 +47,7 @@ done
 echo PROCSTRING $PROCSTRING
 echo INFILESTRING $INFILESTRING
 
+CURRDIR=${PWD}
 OUTDIR="output/out_fit_$LABEL/"
 if [ $doFTEST -gt 0 ]; then
    OUTDIR="output/out_$LABEL/"
@@ -92,7 +96,7 @@ if [ $doFTEST -gt 0 ]; then
     echo "-->Determine Number of gaussians"
     echo "=============================="
     echo "./MysubmitSignalFTest.py --procs $PROCSTRING --flashggCats $CATS --outDir $OUTDIR -i $INFILESTRING --indir $INDIR -q $DEFAULTQUEUE $runLocal"
-    ./MysubmitSignalFTest.py --procs $PROCSTRING --flashggCats $CATS --outDir $OUTDIR -i $INFILESTRING --indir $INDIR -q $DEFAULTQUEUE $runLocal
+   ./MysubmitSignalFTest.py --procs $PROCSTRING --flashggCats $CATS --outDir $OUTDIR -i $INFILESTRING --indir $INDIR -q $DEFAULTQUEUE $runLocal
 #    return 1
     LOOP=1
     while (( $LOOP == 1 )) ; do
@@ -100,13 +104,13 @@ if [ $doFTEST -gt 0 ]; then
 	condor_q
 	echo
 	echo "RUNNING:"
-	ll ${OUTDIR}"/fTestJobs/sub*.sh.run" | wc -l
+	ll ${CURRDIR}/${OUTDIR}"/fTestJobs/sub*.sh.run" | wc -l
 	echo
 	echo "DONE:"
-	ll ${OUTDIR}"/fTestJobs/sub*.sh.done" | wc -l
+	ll ${CURRDIR}/${OUTDIR}"/fTestJobs/sub*.sh.done" | wc -l
 	echo
 	echo "FAIL:"
-	ll ${OUTDIR}"/fTestJobs/sub*.sh.fail" | wc -l
+	ll ${CURRDIR}/${OUTDIR}"/fTestJobs/sub*.sh.fail" | wc -l
 	echo
 	echo 'If you are fine digit "continue"'
 	read -r input

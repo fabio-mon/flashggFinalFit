@@ -157,16 +157,16 @@ TGraph * Normalization_8TeV::GetSigmaGraph(TString process)
 {
 	TGraph * gr = new TGraph();
 	std::map<double, double> * XSectionMap = 0 ;
-	if ( process == "ggh" || process == "ggH" || process.Contains("GG2H") || process.Contains("GluGluHToGG") || process.Contains("ggh201")) {
+	if ( process == "ggh" || process == "ggH" || process.Contains("GG2H") || process.Contains("GluGluHToGG") || process.Contains("ggh_201") ) {
 		XSectionMap = &XSectionMap_ggh;
-	} else if ( process == "vbf" || process.Contains("VBF") || process.Contains("qqh201")) { // FIXME
+	} else if ( process == "vbf" || process.Contains("VBF") || process.Contains("qqh_201") ) { // FIXME
 		XSectionMap = &XSectionMap_vbf;
 	} else if ( process == "vbfold") {
 		XSectionMap = &XSectionMap_vbfold;
 	//} else if ( process == "wzh") {
-	} else if ( process == "wzh" || process == "vh"  || process.Contains("VH") || process.Contains("vh201")) {
+	} else if ( process == "wzh" || process == "vh"  || process.Contains("VH") || process.Contains("vh_201")) {
 		XSectionMap = &XSectionMap_wzh;
-	} else if ( process == "tth" || process.Contains("TTH") || process.Contains("ttH") || process.Contains("tth201")) {
+	} else if ( process == "tth" || process.Contains("TTH") || process.Contains("ttH") || process.Contains("tth_201")) {
 		XSectionMap = &XSectionMap_tth;
 	} else if ( process == "wh") {
 		XSectionMap = &XSectionMap_wh;
@@ -194,7 +194,7 @@ TGraph * Normalization_8TeV::GetSigmaGraph(TString process)
 		XSectionMap = &XSectionMap_bbH_ybyt;
 	} else if ( process.Contains("4FS_yb2") ) {
 		XSectionMap = &XSectionMap_bbH_yb2;
-	} else if ( process.Contains("HHTo2B2G") || process.Contains("hh201") ) {
+	} else if ( process.Contains("HHTo2B2G") || process.Contains("hh_node") ) {
 		XSectionMap = &XSectionMap_HHbbgg;
 	} else {
 		std::cout << "[ERROR] Warning ggh, vbf, wh, zh, wzh, tth or grav or STXS proc not found in histname!!!!" << std::endl;
@@ -249,9 +249,9 @@ double Normalization_8TeV::GetXsection(double mass, TString HistName) {
 
 	std::map<double,double> *XSectionMap;
 
-	if (HistName.Contains("ggh") || HistName.Contains("GG2H") || HistName.Contains("GluGluHToGG") || HistName.Contains("ggh201")) {
+	if (HistName.Contains("GG2H") || HistName.Contains("GluGluHToGG") || HistName.Contains("ggh_201")) {
 		XSectionMap = &XSectionMap_ggh;
-	} else if ((HistName.Contains("vbf") || HistName.Contains("VBF")) && !HistName.Contains("vbfold") || HistName.Contains("qqh201")) {
+	} else if ((HistName.Contains("vbf") || HistName.Contains("VBF")) && !HistName.Contains("vbfold") || HistName.Contains("qqh_201")) {
 		XSectionMap = &XSectionMap_vbf;
 	} else if (HistName.Contains("vbfold")) {
 		XSectionMap = &XSectionMap_vbfold;
@@ -259,9 +259,9 @@ double Normalization_8TeV::GetXsection(double mass, TString HistName) {
 		XSectionMap = &XSectionMap_wh;
 	} else if (HistName.Contains("zh") && !HistName.Contains("wzh")) {
 		XSectionMap = &XSectionMap_zh;
-	} else if (HistName.Contains("wzh") || HistName.Contains("vh") || HistName.Contains("VH")  || HistName.Contains("vh201")) {
+	} else if (HistName.Contains("wzh") || HistName.Contains("VH")  || HistName.Contains("vh_201")) {
 		XSectionMap = &XSectionMap_wzh;
-	} else if (HistName.Contains("tth") || HistName.Contains("TTH") || HistName.Contains("ttH")  || HistName.Contains("tth201")) {
+	} else if (HistName.Contains("TTH") || HistName.Contains("ttH")  || HistName.Contains("tth_201")) {
 		XSectionMap = &XSectionMap_tth;
 	} else if (HistName.Contains("grav")) {
 		XSectionMap = &XSectionMap_sm;
@@ -285,7 +285,7 @@ double Normalization_8TeV::GetXsection(double mass, TString HistName) {
 		XSectionMap = &XSectionMap_bbH_ybyt;
 	} else if ( HistName.Contains("4FS_yb2") ) {
 		XSectionMap = &XSectionMap_bbH_yb2;
-	} else if (HistName.Contains("HHTo2B2G") || HistName.Contains("hh201")) {
+	} else if (HistName.Contains("HHTo2B2G") || HistName.Contains("hh_201")) {
 		XSectionMap = &XSectionMap_HHbbgg;
 	} else {
 		std::cout << "[WARNING] Warning ggh, vbf, wh, zh, wzh, tth or grav or STXS proc not found in " << HistName << std::endl;

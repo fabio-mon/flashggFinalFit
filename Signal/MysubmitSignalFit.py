@@ -11,7 +11,7 @@ from optparse import OptionParser
 from optparse import OptionGroup
 
 replacement_dictionary = {
-    "hh"  : ["hh"  , "DoubleHTag_0"],
+    "hh"  : ["hh_node_SM"  , "DoubleHTag_0"],
     "tth" : ["tth" , "TTHHadronicTag_3"],
     "ggh" : ["ggh" , "UntaggedTag_3"], 
     "qqh" : ["ggh" , "UntaggedTag_3"],
@@ -53,13 +53,20 @@ if opts.indir:
 
 print "Generating rootfilenames for shifted masses"
 fileliststring = ""
-for filename125 in opts.infile.split(","):
-    for m in opts.massList.split(","):
-        filename=filename125.replace("_125.root","_"+m+".root")
-        if fileliststring!="":
-            fileliststring+=","+filename
-        else:
-            fileliststring+=filename
+
+for filename in opts.infile.split(","):
+    if fileliststring!="":
+        fileliststring+=","+filename
+    else:
+        fileliststring+=filename
+
+#for filename125 in opts.infile.split(","):
+#    for m in opts.massList.split(","):
+#        filename=filename125.replace("_125.root","_"+m+".root")
+#        if fileliststring!="":
+#            fileliststring+=","+filename
+#        else:
+#            fileliststring+=filename
     
 print "--> here is the list: "+fileliststring
 
@@ -77,7 +84,7 @@ for proc in  opts.procs.split(","):
   if opts.refProc=="" and opts.refTag=="":
     for myrefproc in replacement_dictionary:
       if myrefproc in proc:
-        referenceproc=replacement_dictionary[myrefproc][0]+opts.year
+        referenceproc=replacement_dictionary[myrefproc][0]+"_"+opts.year
         refProcOpt = " --refProc "+referenceproc
         refTagOpt = " --refTag "+replacement_dictionary[myrefproc][1]
         print "automatic replacement proc,tag is "+referenceproc+","+replacement_dictionary[myrefproc][1] 
@@ -130,7 +137,7 @@ for proc in  opts.procs.split(","):
 print("writing .sub file")
 condorsubname = os.path.abspath('%s/SignalFitJobs/condorsub.sub'%opts.outDir)
 condorsub = open(condorsubname,'w')
-condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
+#condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
 condorsub.write("executable            = $(scriptname)\n")
 condorsub.write("output                = $(scriptname).out\n")
 condorsub.write("error                 = $(scriptname).err\n")
