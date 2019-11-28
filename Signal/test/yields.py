@@ -12,7 +12,9 @@ date = '25_10_2019'
 #filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_all2016_2017_%s.root'%date
 #filename_bkg = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Background/outputs/CMS-HGG_multipdf_HHbbgg_2016_2017_%s.root'%date
 
-filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_all2016_2017_2018_%s.root'%date
+#filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_all2016_2017_2018_%s.root'%date
+filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_allAndNodes2016_2017_2018_25_10_2019.root'
+#filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/inputs/CMS-HGG_sigfit_nodes2018_25_10_2019.root'
 filename_bkg = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Background/outputs/CMS-HGG_multipdf_HHbbgg_2016_2017_2018_%s.root'%date
 wsname = 'wsig_13TeV'
 wsname_bkg = 'multipdf'
@@ -27,7 +29,9 @@ lumi_2018=59.5*1000
 SMsignal=31.05*0.58*0.00227*2  #new most updated x-sec
 
 names="hh_SM_generated_2016,tth_2016,ggh_2016,qqh_2016,vh_2016,hh_SM_generated_2017,tth_2017,ggh_2017,qqh_2017,vh_2017,hh_SM_generated_2018,tth_2018,ggh_2018,qqh_2018,vh_2018".split(',')
-#names="hh_SM_2016,tth_2016,ggh_2016,qqh_2016,vh_2016,hh_SM_2017,tth_2017,ggh_2017,qqh_2017,vh_2017,hh_SM_generated_2018,tth_2018,ggh_2018,qqh_2018,vh_2018".split(',')
+#names="hh_node_SM_2016,hh_node_box_2016,hh_node_SM_2017,hh_node_box_2017,hh_node_SM_2018,hh_node_box_2018".split(',')
+#names="hh_node_SM_2018,hh_node_box_2018".split(',')
+
 
 sum_entries = dict()
 sum_entries_bkg = dict()
@@ -52,7 +56,7 @@ for name in names:
 		sum_entries[name] = entries
 		#print entries , lumi
 		count = entries*lumi
-		if 'hh_SM' in name or 'HH' in name : 
+		if 'hh_' in name or 'HH' in name : 
 			count*=SMsignal
 		sum+=count
 		entries_per_cat[name].append(count)
@@ -93,5 +97,5 @@ for num,name in enumerate([filename_bkg_total]):
 
 
 
-result = open("full_yields_%s.txt"%date,"w")
+result = open("full_yields2_%s.txt"%date,"w")
 result.write(json.dumps(entries_per_cat))

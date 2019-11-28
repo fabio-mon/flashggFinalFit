@@ -753,8 +753,8 @@ int main(int argc, char* argv[]){
 		("sqrts,S", po::value<int>(&sqrts)->default_value(8),																"Which centre of mass is this data from?")
 		("isFlashgg",  po::value<int>(&isFlashgg_)->default_value(1),  								    	        "Use Flashgg output ")
 		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,TTHHadronicTag,TTHLeptonicTag,VHHadronicTag,VHTightTag,VHLooseTag,VHEtTag"),       "Flashgg category names to consider")
-		("signalName", po::value<string>(&signalNameStr_)->default_value("hh2016,hh2017,hh2018"),       "Signal Name")
-		("singleHiggsNames", po::value<string>(&singleHiggsNamesStr_)->default_value("tth2016,ggh2016,qqh2016,vh2016,tth2017,ggh2017,qqh2017,vh2017,tth2018,ggh2018,qqh2018,vh2018"),       "Signal Name")
+		("signalName", po::value<string>(&signalNameStr_)->default_value("hh_node_SM_2016,hh_node_SM_2017,hh_node_SM_2018"),       "Signal Name")
+		("singleHiggsNames", po::value<string>(&singleHiggsNamesStr_)->default_value("tth_2016,ggh_2016,qqh_2016,vh_2016,tth_2017,ggh_2017,qqh_2017,vh_2017,tth_2018,ggh_2018,qqh_2018,vh_2018"),       "Signal Name")
 		("verbose,v", 																																			"Verbose");
 	;
 	po::variables_map vm;
@@ -1087,9 +1087,11 @@ int main(int argc, char* argv[]){
 				double scaleSignal = 10. ; //times to increase and SM xsec BR
 				double scaleSignal_SM = 31.05*0.5824*0.00227*2; //times to increase and SM xsec BR
 		//		double scaleSignal = 1.; //times to increase and SM xsec BR
+				normalization_bbgg += ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",signalName_[0].c_str(),catname.c_str())))->getVal()*35.9*1000.;
+				std::cout << "Normalization bbgg "<< normalization_bbgg<<std::endl;
 				normalization_bbgg += ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",signalName_[1].c_str(),catname.c_str())))->getVal()*41.5*1000.;
 				std::cout << "Normalization bbgg "<< normalization_bbgg<<std::endl;
-				normalization_bbgg += ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",signalName_[0].c_str(),catname.c_str())))->getVal()*35.9*1000.;
+				normalization_bbgg += ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",signalName_[2].c_str(),catname.c_str())))->getVal()*59.4*1000.;
 				std::cout << "Normalization bbgg "<< normalization_bbgg<<std::endl;
 				for (unsigned int pdf_num=0;pdf_num<singleHiggsNames_.size();pdf_num++) 
 				{
@@ -1103,8 +1105,8 @@ int main(int argc, char* argv[]){
 				      if (singleHiggsNames_[pdf_num].find("2018") != string::npos) 
 					intLumiYear = intLumi2018;
 				  double singleHiggs_norm_term = ((RooAbsReal *)w_sig->function(Form("hggpdfsmrel_13TeV_%s_%s_norm",singleHiggsNames_[pdf_num].c_str(),catname.c_str())))->getVal()*intLumiYear*1000.;
-					normalization_singleHiggs+=singleHiggs_norm_term;
-				 	std::cout << "Normalization single Higgs "<< singleHiggsNames_[pdf_num].c_str() << singleHiggs_norm_term<<"  "<<intLumiYear << std::endl;
+				  normalization_singleHiggs+=singleHiggs_norm_term;
+				  std::cout << "Normalization single Higgs "<< singleHiggsNames_[pdf_num].c_str() << singleHiggs_norm_term<<"  "<<intLumiYear << std::endl;
 				}
 					
 

@@ -143,6 +143,8 @@ parser.add_option("--Nkt",type="int",default=1,help="Number of kt points")
 parser.add_option("--ktmin",type="float",default=1.,help="kt min")
 parser.add_option("--ktmax",type="float",default=1.,help="kt max")
 parser.add_option("--rewProc",default='hh_SM_generated_2016,hh_SM_generated_2017,hh_SM_generated_2018',help="What to reweight" )
+parser.add_option("--do_kl_likelihood",default=False,action="store_true",help="prepare datacard for kl likelihood" )
+parser.add_option("--kl_fit_params",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/plots/yeilds_ratio_kl_25_10_2019_finekl_fitparams.json',help="rateParam as a function of kl parametrization" )
 (options,args)=parser.parse_args()
 allSystList=[]
 if options.submitSelf :
@@ -783,6 +785,30 @@ def printBRSyst():
   outFile.write('\n')
 
 
+def printKlLikelihood(years='2016,2017,2018'.split(',')):
+  print '[INFO] kl likelihood ..'
+  with open(options.kl_fit_params,"r") as fit_json:
+    fit_dict = json.load(fit_json)
+
+  hhcard_name = options.hhReweightSM.replace('.txt','_kl_likelihood.txt')
+  os.system('cp %s %s'%(options.hhReweightSM,hhcard_name))  
+  outNew = open(hhcard_name,'a')
+  outNew.write('kl extArg 1.0 [-20.0,20.0]\n')
+  for cat_num,c in enumerate(options.cats):
+     for ipar in range(0,3):
+        outNew.write('param%d_%s extArg %.4f\n'%(ipar,c,fit_dict[c]['p%d'%ipar]))
+     rateParamName = 'kl_hh_%dTeV_%s'%(sqrts,c)
+     outNew.write('%s  rateParam  '%(rateParamName))
+     outNew.write('%s_13TeV '%(c))
+     outNew.write('hh_* ')
+     outNew.write('(@1*@0*@0+@2*@0+@3) kl')
+     for ipar in range(0,3):
+        outNew.write(',')
+        outNew.write('param%d_%s'%(ipar,c))
+     outNew.write('\n')
+     #for ipar in range(0,3):
+     #   outNew.write('nuisance  edit  freeze param%d_%s\n'%(ipar,c))
+  
 def printReweightingKlKt(rewprocs=options.rewProc.split(',')):
   print '[INFO] kl kt reweighting...'
   Nkl = options.Nkl
@@ -1649,6 +1675,11 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
      printReweightingKlKt(rewprocs=options.rewProc.split(','))
      exit()
 ####################################Reweighting kl kt  done##################
+####################################kl likelihood start ##################
+  if options.do_kl_likelihood :
+     printKlLikelihood(years='2016,2017,2018'.split(','))
+     exit()
+####################################kl likelihood done ##################
   
   printPreamble()
   #shape systematic files

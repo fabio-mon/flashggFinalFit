@@ -514,7 +514,7 @@ void Plot(RooRealVar *mass, RooDataSet *data, RooAbsPdf *pdf, pair<double,double
   //TLatex lat1(0.65,0.85,"#splitline{CMS Simulation}{}");
   
   TString newtitle = "H#rightarrow#gamma#gamma";
-  if (title.find("GluGluToHHTo2B2G_node_SM_13TeV_madgraph") != std::string::npos) newtitle = "HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
+  if (title.find("hh") != std::string::npos) newtitle = "HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
   TLatex  lat1(.129+0.03+offset,0.85,newtitle);
   lat1.SetNDC(1);
   lat1.SetTextSize(0.047);
@@ -524,6 +524,7 @@ void Plot(RooRealVar *mass, RooDataSet *data, RooAbsPdf *pdf, pair<double,double
 //  catLabel_humanReadable.ReplaceAll("GluGluToHHTo2B2G_node_SM_13TeV_madgraph","H#rightarrow bb H#rightarrow#gamma#gamma");
   catLabel_humanReadable.ReplaceAll("GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017","");
   catLabel_humanReadable.ReplaceAll("GluGluToHHTo2B2G_node_SM_13TeV_madgraph","");
+  catLabel_humanReadable.ReplaceAll("hh_node_SM_","");
   catLabel_humanReadable.ReplaceAll("GluGluToHToGG","GF Tag");
   catLabel_humanReadable.ReplaceAll("_"," ");
   catLabel_humanReadable.ReplaceAll("UntaggedTag","Untagged");

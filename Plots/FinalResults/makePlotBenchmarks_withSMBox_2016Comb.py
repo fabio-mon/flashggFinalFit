@@ -252,7 +252,7 @@ pt2.SetTextSize(0.040)
 pt2.SetTextFont(42)
 pt2.SetFillStyle(0)
 #pt2.AddText("35.9 fb^{-1} (13 TeV)")
-pt2.AddText("77.4 fb^{-1} (13 TeV)")
+pt2.AddText("136.8 fb^{-1} (13 TeV)")
 
 # pt4 = TPaveText(0.4819196,0.7780357+0.012,0.9008929,0.8675595+0.01+0.012,"brNDC")
 # pt4 = TPaveText(0.4819196,0.67,0.9008929,0.77,"brNDC")

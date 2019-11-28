@@ -77,11 +77,11 @@ def functionGF_kl_wrap (x,par):
 ################################################################################################
 ###########OPTIONS
 parser = OptionParser()
-parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/kl_kt/',help="hh reweighting directory with all txt files" )
+parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/kl_kt_finebinning/',help="hh reweighting directory with all txt files" )
 parser.add_option("--indir", help="Input directory ")
 parser.add_option("--outdir", help="Output directory ")
 parser.add_option("--outtag", help="Output tag ")
-parser.add_option("--blind", action="store_false",help="Observed is present or not ",default=True)
+parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=True)
 (options,args)=parser.parse_args()
 ###########
 ###CREATE TAGS
@@ -115,15 +115,15 @@ ptsList = [] # (x, obs, exp, p2s, p1s, m1s, m2s)
 with open(options.hhReweightDir+"config.json","r") as rew_json:
   rew_dict = json.load(rew_json)
 for ikl in range(0,rew_dict['Nkl']):
-	kl = rew_dict['klmin'] + ikl*(rew_dict['klmax']-rew_dict['klmin']+1)/rew_dict['Nkl']	
+	kl = rew_dict['klmin'] + ikl*rew_dict["klstep"]	
 	kl_str = ("{:.6f}".format(kl)).replace('.','d').replace('-','m') 
 	for ikt in range(0,rew_dict['Nkt']):
-		kt = rew_dict['ktmin'] + ikt*(rew_dict['ktmax']-rew_dict['ktmin']+1)/rew_dict['Nkt']
+		kt = rew_dict['ktmin'] + ikt*rew_dict['ktstep']
 		kt_str = ("{:.6f}".format(kt)).replace('.','d').replace('-','m') 
 
 		fname = options.indir + '/' + 'higgsCombine_kl_%s_kt_%s.Asymptotic.mH125.root'%(kl_str,kt_str)
 		vals  = getVals(fname)
-		if options.blind : obs   = scaleToXS*0.0 ## FIXME
+		if not options.unblind : obs   = scaleToXS*0.0 ## FIXME
 		else : obs   = scaleToXS*vals[5][1] ## ??? which one
 		m2s_t = scaleToXS*vals[0][1]
 		m1s_t = scaleToXS*vals[1][1]
@@ -255,7 +255,7 @@ legend.SetFillColor(ROOT.kWhite)
 legend.SetBorderSize(0)
 # legend
 legend.SetHeader('95% CL upper limits')
-if not options.blind : legend.AddEntry(grobs,"Observed","l")
+if options.unblind : legend.AddEntry(grobs,"Observed","l")
 legend.AddEntry(grexp, "Median expected", "l")
 legend.AddEntry(gr1sigma, "68% expected", "f")
 legend.AddEntry(gr2sigma, "95% expected", "f")

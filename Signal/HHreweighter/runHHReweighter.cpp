@@ -19,15 +19,15 @@ using namespace std;
 //c++ -lm -o runHH runHHReweighter.cpp HHReweight5D.cpp `root-config --glibs --cflags`
 int main ()
 {
-//	 float kl = 1.;
-//	 float kt = 1.;
-	 int Nkl=2;
+	 int Nkl=51;
+	 float klstep = 0.5;
     int Nkt=1;
-	 float klmin=0;
-	 float klmax=1;
+	 float ktstep = 0.;
+	 float klmin=-10;
+	 float klmax=15;
 	 float ktmin=1;
 	 float ktmax=1;
-	
+
 	 TString s;
 	 TString year = "2016";
     TString inMapFile   = "HHreweight_2016nodes_18092019.root" ;
@@ -36,7 +36,7 @@ int main ()
 	 TString addname = "_13TeV_125_13TeV_";
 	 TString processName = "hh";
     TString inputDir = "/work/nchernya/DiHiggs/inputs/25_10_2019/trees/";
-    TString outDir = "kl_kt_test/";
+    TString outDir = "kl_kt_finebinning/";
 	 TString filename = s.Format("output_%s_%s.root",processName.Data(),year.Data()); 
 
     string coeffFile  = "coefficientsByBin_extended_3M_costHHSim_19-4.txt";
@@ -76,9 +76,9 @@ int main ()
     		if ((iEv % 100000 == 0) && (iEv!=0)) cout << "Event: " << iEv << endl;
 			sum_gen_w_SM += weight*hhreweighter->getWeight(1.,1., 0., 0., 0., mhh, cosTheta); 			
 			for(int ikl=0; ikl<Nkl; ++ikl){
-				float kl = klmin + ikl*(klmax-klmin+1)/Nkl;
+				float kl = klmin + ikl*klstep;
 				for(int ikt=0; ikt<Nkt; ++ikt){
-	  				float kt = ktmin + ikt*(ktmax-ktmin+1)/Nkt; 
+	  				float kt = ktmin + ikt*ktstep; 
 					sum_gen_w[ikl+Nkl*ikt] += weight*hhreweighter->getWeight(kl, kt, 0., 0., 0., mhh, cosTheta);
                if (kl==10.) hMhh_kl10->Fill(mhh,weight*hhreweighter->getWeight(kl, kt, 0., 0., 0., mhh, cosTheta)); // for a test only	
 				}
@@ -104,9 +104,9 @@ int main ()
         	if ((iEv % 100000 == 0)&& (iEv!=0)) cout << "Event: " << iEv << endl;
 			sum_w_cats_SM[cat] += weight*hhreweighter->getWeight(1.,1., 0., 0., 0., mhh, cosTheta); 			
 			for(int ikl=0; ikl<Nkl; ++ikl){
-				float kl = klmin + ikl*(klmax-klmin+1)/Nkl;
+				float kl = klmin + ikl*klstep;
 				for(int ikt=0; ikt<Nkt; ++ikt){
-	  				float kt = ktmin + ikt*(ktmax-ktmin+1)/Nkt; 
+	  				float kt = ktmin + ikt*ktstep; 
     	 			sum_w_cats[ikl+Nkl*ikt][cat] += weight*hhreweighter->getWeight(kl, kt, 0., 0., 0., mhh, cosTheta);			
 				}
 			}		
@@ -121,11 +121,11 @@ int main ()
 	}
 
 	for(int ikl=0; ikl<Nkl; ++ikl){
-		float kl = klmin + ikl*(klmax-klmin+1)/Nkl;
+		float kl = klmin + ikl*klstep;
 		for(int ikt=0; ikt<Nkt; ++ikt){
-	  		float kt = ktmin + ikt*(ktmax-ktmin+1)/Nkt; 
+	  		float kt = ktmin + ikt*ktstep; 
 	 		float reweight_cat[NCATS] = {0,0,0,0,0,0,0,0,0,0,0,0};
-			cout<<" kl  "<<kl<<endl;
+		//	cout<<" kl  "<<kl<<endl;
 
 			ofstream out;
 			std::string output_kl = boost::replace_all_copy(std::to_string(kl), ".", "d");
@@ -140,7 +140,7 @@ int main ()
 	 		for (int cat=0;cat<NCATS;cat++){
 				reweight_cat[cat] = sum_w_cats[ikl+Nkl*ikt][cat]/sum_gen_w[ikl+Nkl*ikt];
 				reweight_cat[cat] /= reweight_cat_SM[cat];
-				cout<<reweight_cat[cat]<<endl;
+			//	cout<<reweight_cat[cat]<<endl;
 				out<<reweight_cat[cat]<<endl;
 	 		}
 		}
