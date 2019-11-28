@@ -136,6 +136,13 @@ parser.add_option("--signalProc",default='hh_SM_generated_2016,hh_SM_generated_2
 parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/kl_kt/',help="hh reweighting directory with all txt files" )
 parser.add_option("--hhReweightSM",default='',help="hh base SM card to start from" )
 parser.add_option("--do_kl_scan",default=False,action="store_true",help="do kl scan?" )
+parser.add_option("--Nkl",type="int",default=1,help="Number of kl points")
+parser.add_option("--klmin",type="float",default=1.,help="kl min")
+parser.add_option("--klmax",type="float",default=1.,help="kl max")
+parser.add_option("--Nkt",type="int",default=1,help="Number of kt points")
+parser.add_option("--ktmin",type="float",default=1.,help="kt min")
+parser.add_option("--ktmax",type="float",default=1.,help="kt max")
+parser.add_option("--rewProc",default='hh_SM_generated_2016,hh_SM_generated_2017,hh_SM_generated_2018',help="What to reweight" )
 (options,args)=parser.parse_args()
 allSystList=[]
 if options.submitSelf :
@@ -155,7 +162,7 @@ outFile = open(options.outfilename,'w')
 ###############################################################################
 
 combProc = { 'bkg_mass':'bkg_mass'}
-allProcsNames = 'hh_SM,hh_SM_generated,ggh,qqh,tth,vh'.split(',')
+allProcsNames = 'hh_node_SM,ggh,qqh,tth,vh'.split(',')
 allProcs = []
 for name in allProcsNames:
    allProcs.append(name+'_2016')
@@ -776,38 +783,41 @@ def printBRSyst():
   outFile.write('\n')
 
 
-def printReweightingKlKt(years='2016,2017,2018'.split(',')):
+def printReweightingKlKt(rewprocs=options.rewProc.split(',')):
   print '[INFO] kl kt reweighting...'
-  with open(options.hhReweightDir+"config.json","r") as rew_json:
-    rew_dict = json.load(rew_json)
-  for ikl in range(0,rew_dict['Nkl']):
-    kl = rew_dict['klmin'] + ikl*(rew_dict['klmax']-rew_dict['klmin']+1)/rew_dict['Nkl']
-    kl_str = ("{:.6f}".format(kl)).replace('.','d').replace('-','m') 
-    for ikt in range(0,rew_dict['Nkt']):
-      kt = rew_dict['ktmin'] + ikt*(rew_dict['ktmax']-rew_dict['ktmin']+1)/rew_dict['Nkt']
-      kt_str = ("{:.6f}".format(kt)).replace('.','d').replace('-','m') 
-
-      hhcard_name = options.hhReweightSM.replace('.txt','_kl_%s_kt_%s.txt'%(kl_str,kt_str))
+  Nkl = options.Nkl
+  klmin = options.klmin
+  klmax = options.klmax
+  Nkt = options.Nkt
+  ktmin = options.ktmin
+  ktmax = options.ktmax
+  for ikl in range(0,Nkl):
+    kl = klmin + (ikl+0.5)*(klmax-klmin)/Nkl;
+    for ikt in range(0,Nkt):
+      kt = ktmin + (ikt+0.5)*(ktmax-ktmin)/Nkt;
+      hhcard_name = options.hhReweightSM.replace('.txt','_kl_%.3f_kt_%.3f.txt'%(kl,kt))
       os.system('cp %s %s'%(options.hhReweightSM,hhcard_name))  
       outNew = open(hhcard_name,'a')
-      for year in years:
-        rew_values = [] #for 12 cats
-        with open(options.hhReweightDir+"reweighting_%s_kl_%s_kt_%s.txt"%(year,kl_str,kt_str),"r") as rew_values_file:
-          for line in rew_values_file.readlines():
-            rew_values.append(float(line.strip()))
-        for cat_num,c in enumerate(options.cats):
-          for p in options.procs:
-            if '%s:%s'%(p,c) in options.toSkip: continue
-            if (year in p) and (p in signalProc) :
-             rateParamName = 'kl_hh_%dTeV_%s_%s'%(sqrts,c,year)
-             outNew.write('%s  rateParam  '%(rateParamName))
-             outNew.write('%s_13TeV '%(c))
-             outNew.write('%s '%(p))
-             rew = rew_values[cat_num]
-             outNew.write('%.4f '%(rew))
-             outNew.write('\n')
-             outNew.write('nuisance  edit  freeze %s'%(rateParamName))
-             outNew.write('\n')
+      for rewproc in rewprocs:
+        rew_cats   = []
+        rew_values = []
+        with open(options.hhReweightDir+"reweighting_%s_kl_%.3f_kt_%.3f.txt"%(rewproc,kl,kt),"r") as rew_values_file:
+          cat_line = rew_values_file.readline()
+          rew_cats = [str(x) for x in cat_line.split()]
+          rew_line = rew_values_file.readline()
+          rew_values = [float(x) for x in rew_line.split()]
+          rew_dictionary = dict(zip(rew_cats, rew_values))
+        for catname, reweightvalue in rew_dictionary.items():
+          if catname.replace('_',':') in options.toSkip: continue
+          rateParamName = 'klktreweight_%s_%dTeV_%s'%(rewproc,sqrts,catname)
+          outNew.write('%s  rateParam  '%(rateParamName))
+          outNew.write('%s_13TeV '%(catname))
+          outNew.write('%s '%(rewproc))
+          rew = rew_dictionary[catname]   #TEMPFIX
+          outNew.write('%.4f '%(rew))
+          outNew.write('\n')
+          outNew.write('nuisance  edit  freeze %s'%(rateParamName))
+          outNew.write('\n')
 
 def printLumiSyst(year='2016'):
   print '[INFO] Lumi...'
@@ -1636,7 +1646,7 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
 
 ####################################Reweighting kl kt start##################
   if options.do_kl_scan :
-     printReweightingKlKt(years='2016,2017,2018'.split(','))
+     printReweightingKlKt(rewprocs=options.rewProc.split(','))
      exit()
 ####################################Reweighting kl kt  done##################
   

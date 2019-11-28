@@ -285,7 +285,7 @@ double Normalization_8TeV::GetXsection(double mass, TString HistName) {
 		XSectionMap = &XSectionMap_bbH_ybyt;
 	} else if ( HistName.Contains("4FS_yb2") ) {
 		XSectionMap = &XSectionMap_bbH_yb2;
-	} else if (HistName.Contains("HHTo2B2G") || HistName.Contains("hh_201")) {
+	} else if (HistName.Contains("HHTo2B2G") || HistName.Contains("hh_node")) {
 		XSectionMap = &XSectionMap_HHbbgg;
 	} else {
 		std::cout << "[WARNING] Warning ggh, vbf, wh, zh, wzh, tth or grav or STXS proc not found in " << HistName << std::endl;

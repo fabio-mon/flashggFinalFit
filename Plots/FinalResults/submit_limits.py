@@ -55,9 +55,7 @@ class Parallel:
 
 
 parser = OptionParser()
-parser.add_option("-d","--datfile",help="Pick up running options from datfile")
-parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/kl_kt/',help="hh reweighting directory with all txt files" )
-parser.add_option("-q","--queue",default='short.q',help="Which batch queue")
+parser.add_option("-q","--queue",default='workday',help="Which batch queue")
 parser.add_option("--dryRun",default=False,action="store_true",help="Dont submit")
 parser.add_option("--parallel",default=False,action="store_true",help="Run local fits in multithreading")
 parser.add_option("--runLocal",default=False,action="store_true",help="Run locally")
@@ -71,6 +69,14 @@ parser.add_option("--prefix",default="./")
 parser.add_option("--freezeAll",default=False,action="store_true",help="Freeze all nuisances")
 parser.add_option("--float",default="",action="store",help="Freeze all nuisances")
 parser.add_option("--postFitAll",default=False,action="store_true",help="Use post-fit nuisances for all methods")
+parser.add_option("--hhReweightSM",default='',help="hh base SM card" )
+parser.add_option("--Nkl",type="int",default=1,help="Number of kl points")
+parser.add_option("--klmin",type="float",default=1.,help="kl min")
+parser.add_option("--klmax",type="float",default=1.,help="kl max")
+parser.add_option("--Nkt",type="int",default=1,help="Number of kt points")
+parser.add_option("--ktmin",type="float",default=1.,help="kt min")
+parser.add_option("--ktmax",type="float",default=1.,help="kt max")
+
 specOpts = OptionGroup(parser,"Specific options")
 specOpts.add_option("--datacard",default=None)
 specOpts.add_option("--files",default=None)
@@ -98,28 +104,12 @@ def writePreamble(sub_file):
   workdir = os.getcwd()
   #print "[INFO] writing preamble"
   sub_file.write('#!/bin/bash\n')
-  if (opts.batch == "T3CH"):
-      sub_file.write('set -x\n')
   sub_file.write('touch %s.run\n'%os.path.abspath(sub_file.name))
   sub_file.write('cd %s\n'%os.getcwd())
-  if (opts.batch == "T3CH"):
-      sub_file.write('source $VO_CMS_SW_DIR/cmsset_default.sh\n')
-      sub_file.write('source /mnt/t3nfs01/data01/swshare/glite/external/etc/profile.d/grid-env.sh\n')
-      sub_file.write('export SCRAM_ARCH=slc6_amd64_gcc481\n')
-      sub_file.write('export LD_LIBRARY_PATH=/swshare/glite/d-cache/dcap/lib/:$LD_LIBRARY_PATH\n')
-      sub_file.write('set +x\n') 
   sub_file.write('eval `scramv1 runtime -sh`\n')
-  if (opts.batch == "T3CH"):
-      sub_file.write('set -x\n') 
-  #sub_file.write('cd -\n')
- # if (opts.batch == "T3CH" ) : sub_file.write('cd $TMPDIR\n')
- # sub_file.write('number=$RANDOM\n')
- # sub_file.write('mkdir -p scratch_$number\n')
-  #sub_file.write('cd scratch_$number\n')
-
+  sub_file.write('cd -\n')
 
 def writePostamble(sub_file, exec_line,outtag):
-
   #print "[INFO] writing to postamble"
   sub_file.write('if ( %s ) then\n'%exec_line)
   sub_file.write('\t mv higgsCombine%s*.root %s\n'%(outtag,os.path.abspath(opts.outDir)))
@@ -128,47 +118,61 @@ def writePostamble(sub_file, exec_line,outtag):
   sub_file.write('\t touch %s.fail\n'%os.path.abspath(sub_file.name))
   sub_file.write('fi\n')
   sub_file.write('rm -f %s.run\n'%os.path.abspath(sub_file.name))
-  sub_file.write('rm -rf scratch_$number\n')
+
   sub_file.close()
   system('chmod +x %s'%os.path.abspath(sub_file.name))
   if opts.runLocal:
-     system('bash %s > %s.log'%(os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
+      print 'bash %s > %s.log'%(os.path.abspath(sub_file.name),os.path.abspath(sub_file.name))
+      if not opts.dryRun:
+          system('bash %s > %s.log'%(os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
   elif opts.queue:
     system('rm -f %s.done'%os.path.abspath(sub_file.name))
     system('rm -f %s.fail'%os.path.abspath(sub_file.name))
     system('rm -f %s.log'%os.path.abspath(sub_file.name))
     system('rm -f %s.err'%os.path.abspath(sub_file.name))
-    if (opts.batch == "LSF") : system('bsub -q %s -o %s.log %s'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
-    if (opts.batch == "IC") : system('qsub -q %s -o %s.log -e %s.err %s > out.txt'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name)))
-    if (opts.batch == "T3CH") : 
-          command = 'qsub -q %s -o %s.log -e %s.err %s > out.txt'%(opts.queue,os.path.abspath(sub_file.name),os.path.abspath(sub_file.name),os.path.abspath(sub_file.name))
-          print command
-          system(command)
 
 def writeAsymptotic(jobid,card,outtag):
     print '[INFO] Writing Asymptotic'
     file = open('%s/sub_job%d.sh'%(opts.outDir,jobid),'w')
     writePreamble(file)
     exec_line = ''
-    exec_line +=  'combine %s/%s -n %s -M Asymptotic -m 125.00 --cminDefaultMinimizerType=Minuit2 -L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisGBRLikelihood.so  --rRelAcc 0.001 '%(os.getcwd(),card,outtag)
+    exec_line +=  'combine %s -n %s -M Asymptotic -m 125.00 --cminDefaultMinimizerType=Minuit2 -L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisGBRLikelihood.so  --rRelAcc 0.001 '%(card,outtag)
     if opts.S0: exec_line += ' -s 0 '
     if opts.expected: exec_line += ' --run=blind -t -1'
     writePostamble(file,exec_line,outtag)
-
+    file.close()
 
 #######################################
 system('mkdir -p %s/Jobs/'%opts.outDir)
 counter=0
-with open(opts.hhReweightDir+"config.json","r") as rew_json:
-  rew_dict = json.load(rew_json)
-for ikl in range(0,rew_dict['Nkl']):
-  kl = rew_dict['klmin'] + ikl*(rew_dict['klmax']-rew_dict['klmin']+1)/rew_dict['Nkl']
-  kl_str = ("{:.6f}".format(kl)).replace('.','d').replace('-','m') 
-  for ikt in range(0,rew_dict['Nkt']):
-    kt = rew_dict['ktmin'] + ikt*(rew_dict['ktmax']-rew_dict['ktmin']+1)/rew_dict['Nkt']
-    kt_str = ("{:.6f}".format(kt)).replace('.','d').replace('-','m') 
-    hhcard_name = opts.datacard.replace('.txt','_kl_%s_kt_%s.txt'%(kl_str,kt_str))
-    outtag = '_kl_%s_kt_%s'%(kl_str,kt_str)
+Nkl = opts.Nkl
+klmin = opts.klmin
+klmax = opts.klmax
+Nkt = opts.Nkt
+ktmin = opts.ktmin
+ktmax = opts.ktmax
+for ikl in range(0,Nkl):
+  kl = klmin + (ikl+0.5)*(klmax-klmin)/Nkl;
+  for ikt in range(0,Nkt):
+    kt = ktmin + (ikt+0.5)*(ktmax-ktmin)/Nkt;
+    hhcard_name = opts.hhReweightSM.replace('.txt','_kl_%.3f_kt_%.3f.txt'%(kl,kt))
+    outtag = '_kl_%.3f_kt_%.3f'%(kl,kt)
     print "job ", counter , " , kl =  ", kl, " ,kt =  ", kt, '  outtag = ',outtag
     writeAsymptotic(counter,hhcard_name,outtag)
     counter =  counter+1
+
+#write sub file
+print("writing .sub file")
+condorsubname = os.path.abspath('%s/sub_jobs.sub'%opts.outDir)
+condorsub = open(condorsubname,'w')
+#condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
+condorsub.write("executable            = $(scriptname)\n")
+condorsub.write("output                = $(scriptname).out\n")
+condorsub.write("error                 = $(scriptname).err\n")
+condorsub.write("log                   = $(scriptname).log\n")
+condorsub.write('+JobFlavour           = "'+opts.queue+'"\n')
+condorsub.write("queue scriptname matching %s/sub*.sh"%opts.outDir)
+condorsub.close()
+print("condor_submit "+condorsubname)
+if not opts.dryRun:    
+    os.system("condor_submit "+condorsubname)

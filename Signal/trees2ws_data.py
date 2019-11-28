@@ -89,12 +89,12 @@ target_names = []
 
 for num,f in enumerate(input_files):
    target_names.append('Data_13TeV') 
-   input_files[num] = 'output_' + f 
+   input_files[num] = f 
 
 
 for num,f in enumerate(input_files):
    print 'doing file ',f
-   tfile = ROOT.TFile(opt.inp_dir + f+".root")
+   tfile = ROOT.TFile(opt.inp_dir + f)
    #define roo fit workspace
    datasets=[]
    ws = ROOT.RooWorkspace("cms_hgg_13TeV", "cms_hgg_13TeV")
@@ -107,7 +107,7 @@ for num,f in enumerate(input_files):
  
        datasets += add_dataset_to_workspace( data, ws, name,'') #systemaitcs[1] : this should be done for nominal only, to add weights
          
-   f_out = ROOT.TFile.Open("%s/%s.root"%(opt.out_dir,input_files[num]),"RECREATE")
+   f_out = ROOT.TFile.Open("%s/%s"%(opt.out_dir,input_files[num]),"RECREATE")
    dir_ws = f_out.mkdir("tagsDumper")
    dir_ws.cd()
    ws.Write()

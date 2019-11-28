@@ -671,15 +671,24 @@ vector<string> flashggCats_;
   }
 
   system(Form("mkdir -p %s",outDir.c_str()));
-  TFile *inFile = TFile::Open(fileName.c_str());
+  std::cout<<"opening "<<fileName<<std::endl;
+  TFile *inFile = TFile::Open(fileName.c_str(),"READ");
+  if(!inFile->IsOpen())
+  {
+    std::cout<<"file not open"<<std::endl;
+    return -1;
+  }
   RooWorkspace *inWS;
 	if(isFlashgg_){
 		if (isData_){
+		  std::cout<<" it is data"<<endl;
 			inWS = (RooWorkspace*)inFile->Get("tagsDumper/cms_hgg_13TeV");
 		} else {
+		  std::cout<<" it is not data"<<endl;
 			inWS = (RooWorkspace*)inFile->Get("cms_hgg_workspace");
 		}
 	} else {
+	  std::cout<<" it is not flashgg"<<endl;
 		inWS = (RooWorkspace*)inFile->Get("cms_hgg_workspace");//FIXME
 	}
 	if (verbose) std::cout << "[INFO]  inWS open " << inWS << std::endl;
