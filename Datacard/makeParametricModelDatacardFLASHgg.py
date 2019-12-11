@@ -23,6 +23,20 @@ r.gROOT.ProcessLine(".L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisCombinedLimi
 #r.gROOT.ProcessLine(".L ../libLoopAll.so")
 ###############################################################################
 
+
+def functionGF(kl, kt, c2, cg, c2g):
+	# unused this can be extended to 5D coefficients; currently c2, cg, c2g are unused
+	# return ( A1*pow(kt,4) + A3*pow(kt,2)*pow(kl,2) + A7*kl*pow(kt,3) );
+	## 13 TeV
+	A = [2.09078, 10.1517, 0.282307, 0.101205, 1.33191, -8.51168, -1.37309, 2.82636, 1.45767, -4.91761, -0.675197, 1.86189, 0.321422, -0.836276, -0.568156]
+
+	def pow (base, exp):
+		return base**exp
+	
+	val = A[0]*pow(kt,4) + A[1]*pow(c2,2) + (A[2]*pow(kt,2) + A[3]*pow(cg,2))*pow(kl,2) + A[4]*pow(c2g,2) + ( A[5]*c2 + A[6]*kt*kl )*pow(kt,2) + (A[7]*kt*kl + A[8]*cg*kl )*c2 + A[9]*c2*c2g + (A[10]*cg*kl + A[11]*c2g)*pow(kt,2)+ (A[12]*kl*cg + A[13]*c2g )*kt*kl + A[14]*cg*c2g*kl
+	return val
+
+
 ###############################################################################
 ## WSTFileWrapper  ############################################################
 ###############################################################################
@@ -145,6 +159,7 @@ parser.add_option("--ktmax",type="float",default=1.,help="kt max")
 parser.add_option("--rewProc",default='hh_SM_generated_2016,hh_SM_generated_2017,hh_SM_generated_2018',help="What to reweight" )
 parser.add_option("--do_kl_likelihood",default=False,action="store_true",help="prepare datacard for kl likelihood" )
 parser.add_option("--kl_fit_params",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/plots/yeilds_ratio_kl_25_10_2019_finekl_fitparams.json',help="rateParam as a function of kl parametrization" )
+parser.add_option("--scale_HHXS_to1fb",default=False,action="store_true",help="rescale HHbbgg cross section to 1 fb")
 (options,args)=parser.parse_args()
 allSystList=[]
 if options.submitSelf :
@@ -785,7 +800,7 @@ def printBRSyst():
   outFile.write('\n')
 
 
-def printKlLikelihood(years='2016,2017,2018'.split(',')):
+def printKlLikelihood(rewprocs=options.rewProc.split(',')):
   print '[INFO] kl likelihood ..'
   with open(options.kl_fit_params,"r") as fit_json:
     fit_dict = json.load(fit_json)
@@ -794,20 +809,71 @@ def printKlLikelihood(years='2016,2017,2018'.split(',')):
   os.system('cp %s %s'%(options.hhReweightSM,hhcard_name))  
   outNew = open(hhcard_name,'a')
   outNew.write('kl extArg 1.0 [-20.0,20.0]\n')
-  for cat_num,c in enumerate(options.cats):
-     for ipar in range(0,3):
-        outNew.write('param%d_%s extArg %.4f\n'%(ipar,c,fit_dict[c]['p%d'%ipar]))
-     rateParamName = 'kl_hh_%dTeV_%s'%(sqrts,c)
+  #outNew.write('kt extArg 1.0 [0.,2.]\n')
+  if("hh_node_SM" in rewproc for rewproc in rewprocs):
+     for cat_num,c in enumerate(options.cats):
+        for ipar in range(0,3):
+           outNew.write('param%d_%s extArg %.4f\n'%(ipar,c,fit_dict[c]['p%d'%ipar]))
+        rateParamName = 'kl_hh_%dTeV_%s'%(sqrts,c)
+        outNew.write('%s  rateParam  '%(rateParamName))
+        outNew.write('%s_13TeV '%(c))
+        outNew.write('hh_* ')
+        outNew.write('(@1*@0*@0+@2*@0+@3) kl')
+        for ipar in range(0,3):
+                outNew.write(',')
+                outNew.write('param%d_%s'%(ipar,c))
+        outNew.write('\n')
+        #for ipar in range(0,3):
+        #   outNew.write('nuisance  edit  freeze param%d_%s\n'%(ipar,c))
+
+  if any("tth" in rewproc for rewproc in rewprocs):#formula is (kt*kt+(kl-1)*C1/EWK) / ((1-(kl*kl-1)*dZH)); 
+     dZH = -1.536e-3
+     C1  =  3.51e-2
+     EWK =  1.014
+     rateParamName = 'kl_tth_%dTeV'%(sqrts)
      outNew.write('%s  rateParam  '%(rateParamName))
-     outNew.write('%s_13TeV '%(c))
-     outNew.write('hh_* ')
-     outNew.write('(@1*@0*@0+@2*@0+@3) kl')
-     for ipar in range(0,3):
-        outNew.write(',')
-        outNew.write('param%d_%s'%(ipar,c))
+     outNew.write('*_13TeV ')
+     outNew.write('tth_* ')
+     outNew.write('(1+(@0-1)*%g/%g)/((1-(@0*@0-1)*%g)) kl'%(C1,EWK,dZH)) 
      outNew.write('\n')
-     #for ipar in range(0,3):
-     #   outNew.write('nuisance  edit  freeze param%d_%s\n'%(ipar,c))
+
+  if any("vh" in rewproc for rewproc in rewprocs): 
+     #FIXME WH and ZH have slightly different coefficients, here I take the average of the 2
+     #formula is (kV*kV+(kl-1)*C1/EWK) / ((1-(kl*kl-1)*dZH)); 
+     dZH = -1.536e-3
+     C1  =  (1.03e-2 + 1.19e-2 ) / 2
+     EWK =  (0.93 + 0.947) / 2
+     rateParamName = 'kl_vh_%dTeV'%(sqrts)
+     outNew.write('%s  rateParam  '%(rateParamName))
+     outNew.write('*_13TeV ')
+     outNew.write('vh_* ')
+     outNew.write('(1+(@0-1)*%g/%g)/((1-(@0*@0-1)*%g)) kl'%(C1,EWK,dZH))
+     outNew.write('\n')
+       
+  if any("qqh" in rewproc for rewproc in rewprocs):
+     #formula is (1+(kl-1)*C1/EWK) / ((1-(kl*kl-1)*dZH)); 
+     dZH = -1.536e-3
+     C1  =  0.64e-2
+     EWK =  0.932
+     rateParamName = 'kl_qqh_%dTeV'%(sqrts)
+     outNew.write('%s  rateParam  '%(rateParamName))
+     outNew.write('*_13TeV ')
+     outNew.write('qqh_* ')
+     outNew.write('(1+(@0-1)*%g/%g)/((1-(@0*@0-1)*%g)) kl'%(C1,EWK,dZH)) 
+     outNew.write('\n')
+
+  if any("ggh" in rewproc for rewproc in rewprocs):
+     #formula is (1+(kl-1)*C1/EWK) / ((1-(kl*kl-1)*dZH)); 
+     dZH = -1.536e-3
+     C1  =  0.66e-2
+     EWK =  1.049
+     rateParamName = 'kl_ggh_%dTeV'%(sqrts)
+     outNew.write('%s  rateParam  '%(rateParamName))
+     outNew.write('*_13TeV ')
+     outNew.write('ggh_* ')
+     outNew.write('(1+(@0-1)*%g/%g)/((1-(@0*@0-1)*%g)) kl'%(C1,EWK,dZH)) 
+     outNew.write('\n')
+
   
 def printReweightingKlKt(rewprocs=options.rewProc.split(',')):
   print '[INFO] kl kt reweighting...'
@@ -827,11 +893,15 @@ def printReweightingKlKt(rewprocs=options.rewProc.split(',')):
       for rewproc in rewprocs:
         rew_cats   = []
         rew_values = []
-        with open(options.hhReweightDir+"reweighting_%s_kl_%.3f_kt_%.3f.txt"%(rewproc,kl,kt),"r") as rew_values_file:
+        scaleXS = 1.
+        if options.scale_HHXS_to1fb and ("hh_node_SM" in rewproc):
+                scaleXS = functionGF(kl,kt,0,0,0)*0.079913385
+        #with open(options.hhReweightDir+"reweighting_%s_kl_%.3f_kt_%.3f.txt"%(rewproc,kl,kt),"r") as rew_values_file:
+        with open(options.hhReweightDir+"/%s/reweighting_%s_kl_%.3f_kt_%.3f.txt"%(rewproc,rewproc,kl,kt),"r") as rew_values_file:
           cat_line = rew_values_file.readline()
           rew_cats = [str(x) for x in cat_line.split()]
           rew_line = rew_values_file.readline()
-          rew_values = [float(x) for x in rew_line.split()]
+          rew_values = [(float(x)/scaleXS) for x in rew_line.split()]
           rew_dictionary = dict(zip(rew_cats, rew_values))
         for catname, reweightvalue in rew_dictionary.items():
           if catname.replace('_',':') in options.toSkip: continue
@@ -1677,7 +1747,7 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
 ####################################Reweighting kl kt  done##################
 ####################################kl likelihood start ##################
   if options.do_kl_likelihood :
-     printKlLikelihood(years='2016,2017,2018'.split(','))
+     printKlLikelihood(rewprocs=options.rewProc.split(','))
      exit()
 ####################################kl likelihood done ##################
   

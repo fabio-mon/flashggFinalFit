@@ -57,7 +57,7 @@ class Parallel:
 parser = OptionParser()
 parser.add_option("--cats",default="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11", help = "categories")
 parser.add_option("--channels_to_run",default="all", help = "which channels to run on")
-parser.add_option("--freeze_kl_fit_params",default = "--freezeNuisances param0_DoubleHTag_0,param1_DoubleHTag_0,param2_DoubleHTag_0,param0_DoubleHTag_1,param1_DoubleHTag_1,param2_DoubleHTag_1,param0_DoubleHTag_2,param1_DoubleHTag_2,param2_DoubleHTag_2,param0_DoubleHTag_3,param1_DoubleHTag_3,param2_DoubleHTag_3,param0_DoubleHTag_4,param1_DoubleHTag_4,param2_DoubleHTag_4,param0_DoubleHTag_5,param1_DoubleHTag_5,param2_DoubleHTag_5,param0_DoubleHTag_6,param1_DoubleHTag_6,param2_DoubleHTag_6,param0_DoubleHTag_7,param1_DoubleHTag_7,param2_DoubleHTag_7,param0_DoubleHTag_8,param1_DoubleHTag_8,param2_DoubleHTag_8,param0_DoubleHTag_9,param1_DoubleHTag_9,param2_DoubleHTag_9,param0_DoubleHTag_10,param1_DoubleHTag_10,param2_DoubleHTag_10,param0_DoubleHTag_11,param1_DoubleHTag_11,param2_DoubleHTag_11")
+parser.add_option("--freeze_kl_fit_params",default=True,action="store_true",help="freeze klambda fit parameters")
 parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/kl_kt_finebinning/',help="hh reweighting directory with all txt files" )
 parser.add_option("--do_kl_scan",default=False,action="store_true",help="do kl scan?" )
 parser.add_option("--do_kl_likelihood",default=False,action="store_true",help="prepare datacard for kl likelihood" )
@@ -100,6 +100,14 @@ specOpts.add_option("--jobs",type="int",default=None)
 specOpts.add_option("--pointsperjob",type="int",default=1)
 parser.add_option_group(specOpts)
 (opts,args) = parser.parse_args()
+
+freezing_option_str = ""
+if opts.freeze_kl_fit_params:
+    freezing_option_str = "--freezeNuisances "
+    for c in opts.cats.split(","):
+        for ipar in range(0,3):
+            freezing_option_str += "param%i_%s,"%(ipar,c)
+    freezing_option_str = freezing_option_str.rstrip(',')
 
 allowedMethods = ['Asymptotic','MultiDimFit','GenerateOnly']
 
@@ -144,16 +152,16 @@ def writePostamble(sub_file, exec_line,outtag):
 
 def writeAsymptotic(jobid,card,outtag):
     print '[INFO] Writing Asymptotic'
-    file = open('%s/Jobs/sub_job%d.sh'%(opts.outDir,jobid),'w')
+    file = open('%s/jobs/sub_job%d.sh'%(opts.outDir,jobid),'w')
     writePreamble(file)
-    exec_line =  'combine %s/%s -n %s -M Asymptotic -m 125.00 --cminDefaultMinimizerType=Minuit2 -L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisGBRLikelihood.so  --rRelAcc 0.001 '%(os.getcwd(),card,outtag)
+    exec_line =  'combine %s -n %s -M Asymptotic -m 125.00 --cminDefaultMinimizerType=Minuit2 -L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisGBRLikelihood.so  --rRelAcc 0.001 '%(card,outtag)
     if opts.S0: exec_line += ' -s 0 '
     if opts.expected: exec_line += ' --run=blind -t -1'
     writePostamble(file,exec_line,outtag)
     file.close()
 
 
-def writeMultiDimFitLikelihood(card,toysFile,channels="all",kl_range="-10,15"):
+def writeMultiDimFitLikelihood(card,toysFile,channels="all",kl_range="-10,15",freezing_option_str=""):
     print "[INFO] writing multidim fit"
     mask_str = ""
     if channels!="all" :
@@ -161,23 +169,28 @@ def writeMultiDimFitLikelihood(card,toysFile,channels="all",kl_range="-10,15"):
          if channels != cat:
            mask_str += ",mask_%s_13TeV=1"%(cat)
     for i in range(opts.jobs):
-       file = open('%s/Jobs/sub_%s_job_kl_%d.sh'%(opts.outDir,channels,i),'w')
+       file = open('%s/jobs/sub_%s_job_kl_%d.sh'%(opts.outDir,channels,i),'w')
        writePreamble(file)
-       exec_line = 'combine %s/%s -M MultiDimFit --algo grid --points %s -P kl --floatOtherPOIs 0 --setPhysicsModelParameterRanges kl=%s --setPhysicsModelParameters r=1%s --firstPoint=%d --lastPoint=%d -n MultiDim_%s_%s_Job%d -L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisGBRLikelihood.so %s '%(os.getcwd(),card,opts.pointsperjob*opts.jobs,kl_range,mask_str,i*opts.pointsperjob,(i+1)*opts.pointsperjob-1,channels,opts.outtag,i,opts.freeze_kl_fit_params)
+       exec_line = 'combine %s -M MultiDimFit -m 125.00 --algo grid --points %s -P kl --floatOtherPOIs 0 --setPhysicsModelParameterRanges kl=%s --setPhysicsModelParameters r=1%s --firstPoint=%d --lastPoint=%d -n MultiDim_%s_%s_Job%d -L $CMSSW_BASE/lib/$SCRAM_ARCH/libHiggsAnalysisGBRLikelihood.so %s '%(card,opts.pointsperjob*opts.jobs,kl_range,mask_str,i*opts.pointsperjob,(i+1)*opts.pointsperjob-1,channels,opts.outtag,i,freezing_option_str)
        if opts.S0: exec_line += ' -s 0 '
        if opts.expected: exec_line += ' -t -1 --toysFile %s'%toysFile
        writePostamble(file,exec_line,"MultiDim_%s_%s_Job%d"%(channels,opts.outtag,i))
 
 
 
-def generateAsimovHHSM(card,channels="all"):
+def generateAsimovHHSM(card,channels="all",freezing_option_str=""):
     print "[INFO] generating Asimov SM S+B for channels : %s"%channels
     mask_str = ""
     if channels!="all" :
        for cat in opts.cats.split(","):
          if channels != cat:
            mask_str += ",mask_%s_13TeV=1"%(cat)
-    exec_line = "combine %s/%s  -M GenerateOnly -t -1 --saveToys -n SM_AsimovToy_%s_%s --setPhysicsModelParameters kl=1,r=1%s %s,kl"%(os.getcwd(),card,channels,opts.outtag,mask_str,opts.freeze_kl_fit_params)
+    if(freezing_option_str!=""):
+        freezing_option_str += ",kl"
+    else:
+        freezing_option_str = "--freezeNuisances  kl"
+    exec_line = "combine %s  -m 125.00  -M GenerateOnly -t -1 --saveToys -n SM_AsimovToy_%s_%s --setPhysicsModelParameters kl=1,r=1%s %s"%(card,channels,opts.outtag,mask_str,freezing_option_str)
+    print "EXECUTING "+exec_line
     system(exec_line)
     system('mv higgsCombineSM_AsimovToy_*%s*.root %s\n'%(opts.outtag,os.path.abspath(opts.outDir)))
     
@@ -189,7 +202,7 @@ def checkValidMethod():
 
 #######################################
 checkValidMethod()
-system('mkdir -p %s/Jobs/'%opts.outDir)
+system('mkdir -p %s/jobs/'%opts.outDir)
 if opts.do_kl_scan:
     counter=0
     Nkl = opts.Nkl
@@ -210,7 +223,7 @@ if opts.do_kl_scan:
 
     #write sub file
     print("writing .sub file")
-    condorsubname = os.path.abspath('%s/sub_jobs.sub'%opts.outDir)
+    condorsubname = os.path.abspath('%s/jobs/sub_jobs.sub'%opts.outDir)
     condorsub = open(condorsubname,'w')
     #condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
     condorsub.write("executable            = $(scriptname)\n")
@@ -218,7 +231,7 @@ if opts.do_kl_scan:
     condorsub.write("error                 = $(scriptname).err\n")
     condorsub.write("log                   = $(scriptname).log\n")
     condorsub.write('+JobFlavour           = "'+opts.queue+'"\n')
-    condorsub.write("queue scriptname matching %s/sub*.sh"%opts.outDir)
+    condorsub.write("queue scriptname matching %s/jobs/sub*.sh"%opts.outDir)
     condorsub.close()
     print("condor_submit "+condorsubname)
     if not opts.dryRun:    
@@ -231,9 +244,25 @@ elif opts.do_kl_likelihood:
        if ch!="all" : 
           toysFile = opts.toysFile.replace("all",ch)
           kl_range = "-20,20"
-       writeMultiDimFitLikelihood(opts.datacard,toysFile,ch,kl_range)
+       writeMultiDimFitLikelihood(opts.datacard,toysFile,ch,kl_range,freezing_option_str)
+
+    #write sub file
+    print("writing .sub file")
+    condorsubname = os.path.abspath('%s/jobs/sub_jobs.sub'%opts.outDir)
+    condorsub = open(condorsubname,'w')
+    #condorsub.write('requirements = (OpSysAndVer =?= "SLCern6")\n')
+    condorsub.write("executable            = $(scriptname)\n")
+    condorsub.write("output                = $(scriptname).out\n")
+    condorsub.write("error                 = $(scriptname).err\n")
+    condorsub.write("log                   = $(scriptname).log\n")
+    condorsub.write('+JobFlavour           = "'+opts.queue+'"\n')
+    condorsub.write("queue scriptname matching %s/jobs/sub*.sh"%opts.outDir)
+    condorsub.close()
+    print("condor_submit "+condorsubname)
+    if not opts.dryRun:    
+        os.system("condor_submit "+condorsubname)
 
 elif opts.generateAsimovHHSM:
     for ch in opts.channels_to_run.split(","): 
-      generateAsimovHHSM(opts.datacard,ch)
+      generateAsimovHHSM(opts.datacard,ch,freezing_option_str)
     

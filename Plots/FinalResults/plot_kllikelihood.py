@@ -84,19 +84,18 @@ def create_gr(tree,color):
 
 ###########OPTIONS
 parser = OptionParser()
-parser.add_option("--indir", help="Input directory ")
 parser.add_option("--infile", help="Input file ")
 parser.add_option("--outdir",default='plots/', help="Output directory ")
 parser.add_option("--outtag", help="Output tag")
 parser.add_option("--zoom", action="store_true" , help="Zoom the plot ")
-parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=True)
+parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=False)
 #parser.add_option("--channels_to_run",default="all,DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11", help = "which channels to run on")
 parser.add_option("--channels_to_run",default="all", help = "which channels to run on")
 (options,args)=parser.parse_args()
 ###########
 
 
-fInName = '%s/%s'%(options.indir,options.infile)
+fInName = '%s'%(options.infile)
 fname = fInName
 colors = [1,
 ROOT.kRed+0,ROOT.kOrange+0,ROOT.kGreen+1,ROOT.kBlue-6,

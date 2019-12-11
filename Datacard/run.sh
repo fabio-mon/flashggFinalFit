@@ -1,34 +1,29 @@
 
-#SOMEINPUTFILE='/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/ggh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/hh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/qqh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/tth2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2017_ttHkillerON_first_HH_second_tthLep/shifted_v4/vh2017_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/ggh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/hh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/qqh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/tth2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_v2_2018_ttHkillerON_first_HH_second_tthLep/shifted_v4/vh2018_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/ggh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/hh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/qqh2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/tth2016_13TeV_125.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/legacy_runII_vmix12_2016_ttHkillerON_first_HH_second_tthLep/shifted_v4/vh2016_13TeV_125.root'
-
 SOMEINPUTFILE='/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2016/ggh_2016.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2016/hh_node_SM_2016.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2016/qqh_2016.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2016/tth_2016.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2016/vh_2016.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2017/ggh_2017.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2017/hh_node_SM_2017.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2017/qqh_2017.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2017/tth_2017.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2017/vh_2017.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2018/ggh_2018.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2018/hh_node_SM_2018.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2018/qqh_2018.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2018/tth_2018.root,/eos/user/f/fmonti/HHbbgg_run2/workspaces/NOV142019/ws2018/vh_2018.root'
 
 #for simplicity one single rootfile with all the 3 years !!!
-#SIGNALFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_25_9_2019_newNaming2_newHHBR_allyears.root'
 SIGNALFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/out_fit_20_11_2019_all3years.root'
 
-SMSIGNAL='hh_node_SM_2016,hh_node_SM_2017,hh_node_SM_2018,tth_2016,tth_2017,tth_2018'
-#SMSIGNAL='tth2016,tth2017,tth2018'
-#SMSIGNAL='hh2016,hh2017,hh2018,tth2016,tth2017,tth2018'
+#SMSIGNAL='tth_2016,tth_2017,tth_2018'
+#SMSIGNAL='hh_node_SM_2016,hh_node_SM_2017,hh_node_SM_2018'
+#SMSIGNAL='hh_node_SM_2016,hh_node_SM_2017,hh_node_SM_2018,tth_2016,tth_2017,tth_2018'
+SMSIGNAL='ggh_2017,qqh_2017,hh_node_SM_2017,vh_2017,ggh_2018,qqh_2018,hh_node_SM_2018,vh_2018,ggh_2016,qqh_2016,hh_node_SM_2016,vh_2016,tth_2016,tth_2017,tth_2018'
+DATAFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Background/CMS-HGG_multipdf_HHbbgg_allyears_20_11_2019.root'
 
-DATAFILE='/afs/cern.ch/user/f/fmonti/work/flashggFinalFit/CMSSW_7_4_7/src/flashggFinalFit/Background/CMS-HGG_multipdf_HHbbgg_allyears_25_9_2019_newNaming2_newHHBR.root'
-
-#PROCS='ggh2017,qqh2017,tth2017,vh2017,ggh2018,qqh2018,tth2018,vh2018,ggh2016,qqh2016,tth2016,vh2016'
 PROCS='ggh_2017,qqh_2017,hh_node_SM_2017,vh_2017,ggh_2018,qqh_2018,hh_node_SM_2018,vh_2018,ggh_2016,qqh_2016,hh_node_SM_2016,vh_2016,tth_2016,tth_2017,tth_2018'
-#PROCS='ggh2016,qqh2016,vh2016,ggh2017,qqh2017,vh2017,ggh2018,qqh2018,vh2018'
 
-CATS='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11'
-#CATS='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,THQLeptonicTag,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,VHHadronicTag,VHLeptonicLooseTag,VHMetTag,WHLeptonicTag,ZHLeptonicTag'
+#CATS='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11'
+CATS='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,THQLeptonicTag,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3,UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,VBFTag_0,VBFTag_1,VBFTag_2,VHHadronicTag,VHLeptonicLooseTag,VHMetTag,WHLeptonicTag' #,ZHLeptonicTag'
 
 SCALES=""
 SMEARS=""
 SCALESCORR=""
 SCALESGLOBAL=""
-INTLUMI2016=27.89
-INTLUMI2017=41.00 
-INTLUMI2018=38.79
+INTLUMI2016=35.91
+INTLUMI2017=41.53 
+INTLUMI2018=59.35
 
-OUTPUTDATACARD="./mydatacard_20_11_2019.txt"
+OUTPUTDATACARD="./mydatacard_20_11_2019_AllTags_AllsingleHandHHsignal.txt"
 
 echo ./makeParametricModelDatacardFLASHgg.py \
 -i $SOMEINPUTFILE \

@@ -77,11 +77,16 @@ def functionGF_kl_wrap (x,par):
 ################################################################################################
 ###########OPTIONS
 parser = OptionParser()
-parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/25_10_2019/trees/kl_kt_finebinning/',help="hh reweighting directory with all txt files" )
+parser.add_option("--Nkl",type="int",default=1,help="Number of kl points")
+parser.add_option("--klmin",type="float",default=1.,help="kl min")
+parser.add_option("--klmax",type="float",default=1.,help="kl max")
+parser.add_option("--Nkt",type="int",default=1,help="Number of kt points")
+parser.add_option("--ktmin",type="float",default=1.,help="kt min")
+parser.add_option("--ktmax",type="float",default=1.,help="kt max")
 parser.add_option("--indir", help="Input directory ")
 parser.add_option("--outdir", help="Output directory ")
 parser.add_option("--outtag", help="Output tag ")
-parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=True)
+parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=False)
 (options,args)=parser.parse_args()
 ###########
 ###CREATE TAGS
@@ -112,33 +117,34 @@ grobs = ROOT.TGraph()
 ptsList = [] # (x, obs, exp, p2s, p1s, m1s, m2s)
 
 ### read the scan with normal width
-with open(options.hhReweightDir+"config.json","r") as rew_json:
-  rew_dict = json.load(rew_json)
-for ikl in range(0,rew_dict['Nkl']):
-	kl = rew_dict['klmin'] + ikl*rew_dict["klstep"]	
-	kl_str = ("{:.6f}".format(kl)).replace('.','d').replace('-','m') 
-	for ikt in range(0,rew_dict['Nkt']):
-		kt = rew_dict['ktmin'] + ikt*rew_dict['ktstep']
-		kt_str = ("{:.6f}".format(kt)).replace('.','d').replace('-','m') 
-
-		fname = options.indir + '/' + 'higgsCombine_kl_%s_kt_%s.Asymptotic.mH125.root'%(kl_str,kt_str)
-		vals  = getVals(fname)
-		if not options.unblind : obs   = scaleToXS*0.0 ## FIXME
-		else : obs   = scaleToXS*vals[5][1] ## ??? which one
-		m2s_t = scaleToXS*vals[0][1]
-		m1s_t = scaleToXS*vals[1][1]
-		exp   = scaleToXS*vals[2][1]
-		p1s_t = scaleToXS*vals[3][1]
-		p2s_t = scaleToXS*vals[4][1]
-	
-		## because the other code wants +/ sigma vars as deviations, without sign, from the centeal exp value...
-		p2s = p2s_t - exp
-		p1s = p1s_t - exp
-		m2s = exp - m2s_t
-		m1s = exp - m1s_t
-		xval = kl
-		print xval,exp	
-		ptsList.append((xval, obs, exp, p2s, p1s, m1s, m2s))
+Nkl = options.Nkl
+klmin = options.klmin
+klmax = options.klmax
+Nkt = options.Nkt
+ktmin = options.ktmin
+ktmax = options.ktmax
+for ikl in range(0,Nkl):
+   kl = klmin + (ikl+0.5)*(klmax-klmin)/Nkl;
+   for ikt in range(0,Nkt):
+      kt = ktmin + (ikt+0.5)*(ktmax-ktmin)/Nkt;
+      fname = options.indir + '/' + 'higgsCombine_kl_%.3f_kt_%.3f.Asymptotic.mH125.root'%(kl,kt)
+      vals  = getVals(fname)
+      if not options.unblind : obs   = scaleToXS*0.0 ## FIXME
+      else : obs   = scaleToXS*vals[5][1] ## ??? which one
+      m2s_t = scaleToXS*vals[0][1]
+      m1s_t = scaleToXS*vals[1][1]
+      exp   = scaleToXS*vals[2][1]
+      p1s_t = scaleToXS*vals[3][1]
+      p2s_t = scaleToXS*vals[4][1]
+      
+      ## because the other code wants +/ sigma vars as deviations, without sign, from the centeal exp value...
+      p2s = p2s_t - exp
+      p1s = p1s_t - exp
+      m2s = exp - m2s_t
+      m1s = exp - m1s_t
+      xval = kl
+      print xval,exp	
+      ptsList.append((xval, obs, exp, p2s, p1s, m1s, m2s))
 
 # ### read the scan with finer width for more precision in the 0-8 region
 # lambdasfiner = [0.1*x for x in range(0, 80)] # I am removing doubly counted points
