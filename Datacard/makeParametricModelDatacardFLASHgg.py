@@ -160,6 +160,7 @@ parser.add_option("--rewProc",default='hh_SM_generated_2016,hh_SM_generated_2017
 parser.add_option("--do_kl_likelihood",default=False,action="store_true",help="prepare datacard for kl likelihood" )
 parser.add_option("--kl_fit_params",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/plots/yeilds_ratio_kl_25_10_2019_finekl_fitparams.json',help="rateParam as a function of kl parametrization" )
 parser.add_option("--scale_HHXS_to1fb",default=False,action="store_true",help="rescale HHbbgg cross section to 1 fb")
+parser.add_option("--do_benchmark_reweight",default=False,action="store_true",help="prepare datacard for benchmarks" )
 (options,args)=parser.parse_args()
 allSystList=[]
 if options.submitSelf :
@@ -799,6 +800,33 @@ def printBRSyst():
   outFile.write('\n')
   outFile.write('\n')
 
+
+def printBenchmarkReweight(years='2016,2017,2018'.split(',')):
+  print '[INFO] benchmark reweighting ..'
+  for inode in range(0,15):
+    hhcard_name = options.hhReweightSM.replace('.txt','_node_%i.txt'%(inode))
+    os.system('cp %s %s'%(options.hhReweightSM,hhcard_name))
+    outNew = open(hhcard_name,'a')
+    for year in years:
+      with open(options.hhReweightDir+"/reweighting_hh_benchmark_%i_%s.txt"%(inode,year),"r") as rew_values_file:
+        cat_line = rew_values_file.readline()
+        rew_cats = [str(x) for x in cat_line.split()]
+        rew_line = rew_values_file.readline()
+        rew_values = [float(x) for x in rew_line.split()]
+        rew_dictionary = dict(zip(rew_cats, rew_values))
+        for catname, reweightvalue in rew_dictionary.items():
+          if catname.replace('_',':') in options.toSkip: continue
+          rateParamName = 'benchmarkreweight_hh_%dTeV_%s'%(sqrts,catname)
+          outNew.write('%s  rateParam  '%(rateParamName))
+          outNew.write('%s_13TeV '%(catname))
+          outNew.write('hh_node_SM_%s '%(year))
+          rew = rew_dictionary[catname]   
+          outNew.write('%.4f '%(rew))
+          outNew.write('\n')
+          outNew.write('nuisance  edit  freeze %s'%(rateParamName))
+          outNew.write('\n')
+    outNew.close()
+    
 
 def printKlLikelihood(rewprocs=options.rewProc.split(',')):
   print '[INFO] kl likelihood ..'
@@ -1750,6 +1778,11 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
      printKlLikelihood(rewprocs=options.rewProc.split(','))
      exit()
 ####################################kl likelihood done ##################
+####################################benchmark reweight start ##################
+  if options.do_benchmark_reweight :
+     printBenchmarkReweight(years='2016,2017,2018'.split(','))
+     exit()
+####################################benchmark reweight done ##################
   
   printPreamble()
   #shape systematic files
