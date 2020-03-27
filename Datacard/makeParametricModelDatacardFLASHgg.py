@@ -107,9 +107,11 @@ parser.add_option("-i","--infilename", help="Input file (binned signal from flas
 parser.add_option("-s","--signalFile", help="Input signal file (binned signal from flashgg)")
 parser.add_option("--nodesFile", default="",help="Input nodes file (binned signal from flashgg)")
 parser.add_option("-d","--dataFile", help="Input data file (binned signal from flashgg)")
+parser.add_option("--dataFile2D", help="Input data file 2D (binned signal from flashgg)")
 parser.add_option("-o","--outfilename",default="cms_hgg_datacard.txt",help="Name of card to print (default: %default)")
 parser.add_option("-p","--procs",default="ggh,vbf,wh,zh,tth",help="String list of procs (default: %default)")
-parser.add_option("-c","--cats",default="UntaggedTag_0,UntaggedTag_1,UntaggedTag_2,UntaggedTag_3,UntaggedTag_4,VBFTag_0,VBFTag_1,VBFTag_2",help="Flashgg Categories (default: %default)")
+parser.add_option("-c","--cats",default="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3",help="Flashgg Categories (default: %default)")
+parser.add_option("--cats2D",default="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11",help="Flashgg 2D Categories (default: %default)")
 parser.add_option("--uepsfilename",default="",help="input files for calculating UEPS systematics; leave blank to use most recent set")
 parser.add_option("--batch",default="LSF",help="Batch system  (default: %default)")
 parser.add_option("--photonCatScales",default="HighR9EE,LowR9EE,HighR9EB,LowR9EB",help="String list of photon scale nuisance names - WILL NOT correlate across years (default: %default)")
@@ -140,7 +142,6 @@ parser.add_option("--do_kl_scan",default=False,action="store_true",help="do kl s
 parser.add_option("--do_benchmarks_scan",default=False,action="store_true",help="do BSM benchmarks scan?" )
 parser.add_option("--do_kl_likelihood",default=False,action="store_true",help="prepare datacard for kl likelihood" )
 parser.add_option("--kl_fit_params",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/plots/yeilds_ratio_kl_xsec_24_01_2020_fitparams.json',help="rateParam as a function of kl parametrization" )
-parser.add_option("--do2D",default=False,action="store_true",help="prepare datacard for 2D HHbbgg analysis" )
 parser.add_option("--btagReshapeFalse",default=False,action="store_true",help="if btagReshapeWeight was propagated with False in flashgg" )
 (options,args)=parser.parse_args()
 allSystList=[]
@@ -162,7 +163,7 @@ outFile = open(options.outfilename,'w')
 
 #Define all process of interest
 combProc = { 'bkg_mass':'bkg_mass'}
-allProcsNames = 'hh_SM,hh_SM_generated,ggh,qqh,tth,vh'.split(',')
+allProcsNames = 'hh_SM,hh_SM_generated,ggh,qqh,tth,vh,thq'.split(',')
 allProcs = []
 for name in allProcsNames:
    allProcs.append(name+'_2016')
@@ -219,6 +220,7 @@ options.toSkip = options.toSkip.split(',')
 ###############################################################################
 #split cats
 options.cats = options.cats.split(',')
+options.cats2D = options.cats2D.split(',')
 # cat types
 incCats     =[] #Untagged
 dijetCats   =[] #VBF 
@@ -312,15 +314,12 @@ sigFiles = options.signalFile.split(',')
 if options.nodesFile=="" : nodesFile = ['','',''] 
 else : nodesFile = options.nodesFile.split(',')
 signalPdfName = 'hggpdfsmrel'
-if options.do2D : 
-   signalPdfName = 'hhbbggpdfsm'
 
 #print "making sigfile " ,sigFile
 sigWS = 'wsig_%dTeV'%(sqrts)
 # file detaisl: for FLashgg always use unbinned signal and multipdf
 fileDetails = {}
 fileDetails['data_obs'] = [dataFile,dataWS,'roohist_data_mass_$CHANNEL']
-if options.do2D :  fileDetails['data_obs'] = [dataFile,dataWS,'Data_13TeV_$CHANNEL']
 fileDetails['bkg_mass']  = [bkgFile,bkgWS,'CMS_hgg_$CHANNEL_%dTeV_bkgshape'%sqrts]
 
 if options.doSTXS:
@@ -342,11 +341,11 @@ else:
   fileDetails['qqH_hgg']       = [sigFile.replace('$PROC',"vbf"),sigWS,'hggpdfsmrel_%dTeV_vbf_$CHANNEL'%sqrts]
   fileDetails['ttH_hgg']       = [sigFile.replace('$PROC',"tth"),sigWS,'hggpdfsmrel_%dTeV_tth_$CHANNEL'%sqrts]
   for proc in allProcs:
-      if (proc in allNodes) and ('2018' in proc) : fileDetails[proc] = 	[nodesFile[2],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif (proc in allNodes) and ('2017' in proc): fileDetails[proc] = 	[nodesFile[1],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+      if (proc in allNodes) and ('2018' in proc) : fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+      elif (proc in allNodes) and ('2017' in proc): fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
       elif (proc in allNodes) and ('2016' in proc): fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif ('2018' in proc) : fileDetails[proc] = 	[sigFiles[2],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif ('2017' in proc) : fileDetails[proc] = 	[sigFiles[1],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+      elif ('2018' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+      elif ('2017' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
       elif ('2016' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
 
   if splitVH:
@@ -1147,9 +1146,29 @@ def printFileOptions():
   print '[INFO] File opts...'
   for typ, info in fileDetails.items():
     for c in options.cats:
-      file = info[0].replace('$CAT','%s'%c)
-      wsname = info[1]
-      pdfname = info[2].replace('$CHANNEL','%s'%c)
+      infocopy = []
+      infocopy.extend(info)
+      print '----------------------------------------'
+      print c
+      print 'initial typ, info'
+      print typ
+      print infocopy
+ 
+      if c in options.cats2D:
+         if typ=='data_obs':
+            infocopy[0]=options.dataFile2D
+            infocopy[2]='Data_13TeV_$CHANNEL'
+         elif typ=='bkg_mass':
+            infocopy[0]=options.dataFile2D
+         else:
+            infocopy[2]=infocopy[2].replace('hggpdfsmrel','hhbbggpdfsm')
+      print 'final typ, info'
+      print typ
+      print infocopy
+      print '----------------------------------------'
+      file = infocopy[0].replace('$CAT','%s'%c)
+      wsname = infocopy[1]
+      pdfname = infocopy[2].replace('$CHANNEL','%s'%c)
       if typ not in options.procs and typ!='data_obs': continue
       #outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file.replace(".root","_%s_%s.root"%(typ,c)),wsname+':'+pdfname))
       outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
