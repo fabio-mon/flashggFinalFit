@@ -1,18 +1,20 @@
 doFTEST=0
-doFIT=0
+doFIT=1
 doPACKAGER=0
-doCALCPHOSYST=1
+doCALCPHOSYST=0 #Not needed, only for shape syst, checked to be negligible
 MASS=''
 
-YEAR="2016"
+#YEAR="2016"
 #YEAR="2017"
-#YEAR="2018"
+YEAR="2018"
 
 #DATE="24_01_2020"
 #DATE="04_02_2020"
 DATE="2020"
 EXT="singleHiggs"$YEAR
 #EXT="nodes"$YEAR
+#EXT="vbfhh"$YEAR
+EXT="hhNLO"$YEAR
 PHOTONSYSTFILE=dat/photonCatSyst.dat # without systematics
 #PHOTONSYSTFILE=dat/photonCatSyst_${EXT}.dat
 
@@ -33,13 +35,12 @@ CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTa
 REFTAG="DoubleHTag_0"
 INTLUMI=136.8
 
+###########Not needed, only for shape syst, checked to be negligible
 SCALES="HighR9EE,LowR9EE,HighR9EB,LowR9EB"
 SMEARS="HighR9EERho,LowR9EERho,HighR9EEPhi,LowR9EEPhi,HighR9EBPhi,LowR9EBPhi,HighR9EBRho,LowR9EBRho"
 SCALESCORR="MaterialCentralBarrel,MaterialOuterBarrel,MaterialForward"
 SCALESGLOBAL="NonLinearity,Geant4,LightYield,Absolute"
 
-#PROCS="hh_SM_generated_${YEAR},ggh_${YEAR},tth_${YEAR},qqh_${YEAR},vh_${YEAR}"
-#INFILES="output_hh_SM_generated_${YEAR},output_ggh_${YEAR},output_tth_${YEAR},output_qqh_${YEAR},output_vh_${YEAR}"
 
 #############SINGLE HIGGS ############
 PROCS="ggh_${YEAR},tth_${YEAR},qqh_${YEAR},vh_${YEAR},thq_${YEAR}"
@@ -49,16 +50,20 @@ REFTAG="DoubleHTag_9"
 ###tests##
 #PROCS="tth_${YEAR}"
 #REFPROC="tth_${YEAR}"
-#INFILES="output_tth_${YEAR}"
-#CATS="DoubleHTag_1,DoubleHTag_4,DoubleHTag_5,DoubleHTag_8"
+#INFILES="output_ggh_${YEAR},output_tth_${YEAR},output_qqh_${YEAR},output_vh_${YEAR}"
+#REFTAG="DoubleHTag_9"
 #############NODES ############
-#PROCS="hh_node_SM_$YEAR,hh_node_box_$YEAR,hh_node_0_$YEAR,hh_node_1_$YEAR,hh_node_2_$YEAR,hh_node_3_$YEAR,hh_node_4_$YEAR,hh_node_5_$YEAR,hh_node_6_$YEAR,hh_node_7_$YEAR,hh_node_8_$YEAR,hh_node_9_$YEAR,hh_node_10_$YEAR,hh_node_11_$YEAR"
-#INFILES="output_hh_node_SM_$YEAR,output_hh_node_box_$YEAR,output_hh_node_0_$YEAR,output_hh_node_1_$YEAR,output_hh_node_2_$YEAR,output_hh_node_3_$YEAR,output_hh_node_4_$YEAR,output_hh_node_5_$YEAR,output_hh_node_6_$YEAR,output_hh_node_7_$YEAR,output_hh_node_8_$YEAR,output_hh_node_9_$YEAR,output_hh_node_10_$YEAR,output_hh_node_11_$YEAR"
-#PROCS="hh_node_SM_$YEAR,hh_node_4_$YEAR,hh_node_6_$YEAR,hh_node_7_$YEAR,hh_node_9_$YEAR,hh_node_10_$YEAR,hh_node_11_$YEAR"
-#INFILES="output_hh_node_SM_$YEAR,output_hh_node_4_$YEAR,output_hh_node_6_$YEAR,output_hh_node_7_$YEAR,output_hh_node_9_$YEAR,output_hh_node_10_$YEAR,output_hh_node_11_$YEAR"
 #REFPROC="hh_node_SM_$YEAR"
 #PROCS="hh_node_SM_$YEAR"
 #INFILES="output_hh_node_SM_$YEAR"
+################################
+#REFPROC="vbfhh_$YEAR"
+#PROCS="vbfhh_$YEAR"
+#INFILES="output_vbfhh_$YEAR"
+#############HH NLO ############
+REFPROC="ggHH_kl_0_kt_1_${YEAR}"
+PROCS="ggHH_kl_0_kt_1_${YEAR},ggHH_kl_1_kt_1_${YEAR},ggHH_kl_2p45_kt_1_${YEAR},ggHH_kl_5_kt_1_${YEAR}"
+INFILES="output_ggHH_kl_0_kt_1_${YEAR},output_ggHH_kl_1_kt_1_${YEAR},output_ggHH_kl_2p45_kt_1_${YEAR},output_ggHH_kl_5_kt_1_${YEAR}"
 ################################
 
 
@@ -147,17 +152,8 @@ if [ $doFIT -gt 0 ]; then
   echo "python mergeWorkspaces.py ${OUTDIR}/CMS-HGG_sigfit_${EXT}_${DATE}.root ${OUTDIR}/CMS-HGG_sigfit_*.root"
 fi
 
-######################Combined output for 2016+2017################
-#OUTDIR="output/out_20_02_2019_set20162017"
-#PROCS1="GluGluToHHTo2B2G_node_0_13TeV_madgraph,GluGluToHHTo2B2G_node_1_13TeV_madgraph,GluGluToHHTo2B2G_node_2_13TeV_madgraph,GluGluToHHTo2B2G_node_3_13TeV_madgraph,GluGluToHHTo2B2G_node_4_13TeV_madgraph,GluGluToHHTo2B2G_node_5_13TeV_madgraph,GluGluToHHTo2B2G_node_6_13TeV_madgraph,GluGluToHHTo2B2G_node_7_13TeV_madgraph,GluGluToHHTo2B2G_node_8_13TeV_madgraph,GluGluToHHTo2B2G_node_9_13TeV_madgraph,GluGluToHHTo2B2G_node_10_13TeV_madgraph,GluGluToHHTo2B2G_node_11_13TeV_madgraph"
-#YEAR='_2017'
-#PROCS2="GluGluToHHTo2B2G_node_0_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_1_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_2_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_3_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_4_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_5_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_6_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_7_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_8_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_9_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_10_13TeV_madgraph$YEAR,GluGluToHHTo2B2G_node_11_13TeV_madgraph$YEAR"
-#PROCS="$PROCS1,$PROCS2"
-#EXT="nodes2016_2017"
 
-
-
-################################DO NOT USE PACKAGER FOR THE LIMITS . IT IS MESSED UP IN CURRENT MASTER BRANCH. BUT IT IS STILL CAN BE USED FOR PLOTTING############
+###############################Packager is used for plotting only #############################
 LUMI=35.9
 if [ $YEAR == "2016" ]; then
 	LUMI=35.9

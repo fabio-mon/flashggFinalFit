@@ -164,7 +164,7 @@ outFile = open(options.outfilename,'w')
 
 #Define all process of interest
 combProc = { 'bkg_mass':'bkg_mass'}
-allProcsNames = 'hh_SM,hh_SM_generated,ggh,qqh,tth,vh,thq'.split(',')
+allProcsNames = 'hh_SM,hh_SM_generated,vbfhh,ggh,qqh,tth,vh,thq'.split(',')
 allProcs = []
 for name in allProcsNames:
    allProcs.append(name+'_2016')
@@ -183,7 +183,11 @@ for node in whichNodes:
      combProc[proc] = proc
      allNodes.append(proc)
      allProcs.append(proc)
-
+for p in 'ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1'.split(','):
+   for y in ['2016','2017','2018']:
+     combProc[p+'_'+y] = p+'_'+y
+     allNodes.append(p+'_'+y)
+     allProcs.append(p+'_'+y)
 	
 flashggProc = combProc
 
@@ -191,7 +195,7 @@ procId = {'bkg_mass':1}
 procNum=2
 for y in ['2016','2017','2018']:
   for proc in allProcsNames:
-    if 'hh' not in proc:
+    if 'hh' not in proc or ('HH' not in proc):
       procId[proc+'_%s'%y]=procNum
       procNum+=1 
 
@@ -775,7 +779,7 @@ def printBRSyst():
       if '%s:%s'%(p,c) in options.toSkip: continue
       if p in bkgProcs:
         outFile.write('- ')
-      elif 'hh' in p:
+      elif 'hh' in p or 'HH' in p:
         outFile.write('%5.3f/%5.3f '%(1./(1.-brSyst_bbgg[1]),1.+brSyst_bbgg[0]))
       else:
          outFile.write('%5.3f/%5.3f '%(1./(1.-brSyst[1]),1.+brSyst[0]))
@@ -881,13 +885,14 @@ def printReweightingKlKt(years='2016,2017,2018'.split(',')):
 def printTheorySystHHbbgg():
   print '[INFO] TheorySyst...'
   theory_dict = {}
-  with open("/afs/cern.ch/user/f/fmonti/work/flashggFinalFit2/CMSSW_7_4_7/src/flashggFinalFit/MetaData_HHbbgg/theory_unc_YR4.dat","r") as theory_file:
-    for line in csv.reader(theory_file, delimiter=" "):
+  with open("../MetaData_HHbbgg//theory_unc_YR4.dat","r") as theory_file:
+    for line in csv.reader(theory_file, delimiter="\t"):
        print line
        current_proc,unc = line
        theory_dict[current_proc] = unc
 
-  for cons in 'tth,qqh,vh,hh,ggh'.split(','):
+  #for cons in 'tth,qqh,vh,hh,ggh'.split(','):
+  for cons in 'tth,qqh,vh,ggh,ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1'.split(','):
     outFile.write('%s%-35s   lnN   '%('pdf_',cons))
     for c in options.cats:
        for p in options.procs:
@@ -895,13 +900,13 @@ def printTheorySystHHbbgg():
          if p in bkgProcs:
            outFile.write('- ')
          elif (p.split('_')[0]) in cons :
-           outFile.write('%s '%(theory_dict[('pdf_'+(p.split('_')[0]))]))
+           outFile.write('%s '%(theory_dict[('pdf_'+(p.split('_201')[0]))])) #removing the year from the name
          else : 
            outFile.write('- ')
     outFile.write('\n')
     outFile.write('\n')
 
-  for cons in 'tth,qqh,vh,hh,ggh'.split(','):
+  for cons in 'tth,qqh,vh,ggh'.split(','):
     outFile.write('%s%-35s   lnN   '%('QCDscale_',cons))
     for c in options.cats:
        for p in options.procs:
@@ -909,7 +914,7 @@ def printTheorySystHHbbgg():
          if p in bkgProcs:
            outFile.write('- ')
          elif (p.split('_')[0]) in cons :
-           outFile.write('%s '%(theory_dict[('QCDscale_'+(p.split('_')[0]))]))
+           outFile.write('%s '%(theory_dict[('QCDscale_'+(p.split('_201')[0]))]))#removing the year from the name
          else : 
            outFile.write('- ')
     outFile.write('\n')
@@ -1220,7 +1225,9 @@ def printFileOptions():
       pdfname = infocopy[2].replace('$CHANNEL','%s'%c)
       if typ not in options.procs and typ!='data_obs': continue
       #outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file.replace(".root","_%s_%s.root"%(typ,c)),wsname+':'+pdfname))
-      outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
+      if 'DoubleHTag_10' in c or 'DoubleHTag_11' in c : outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file.replace('70GeV','90GeV'),wsname+':'+pdfname))
+      else : outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
+      #outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
   outFile.write('\n')
 ###############################################################################
 
@@ -1273,12 +1280,10 @@ def printObsProcBinLines():
         if c in tthCats:
           if c in tthLepCat: scale *= tthLepRateScale
           else: scale *= tthHadRateScale
-      #  if ('node_') in p and (not 'generated' in p): 
-      #      scale*=2.
-      #  if ('hh_node_SM') in p : #just a check for ivan ntuples
-      #      if '2018' in  p : scale*=1.0221
-      #      if '2017' in  p : scale*=1.0171
-      #      if '2016' in  p : scale*=1.03
+      #  if ('ggh') in p : #just a check
+      #     scale*=0.5
+      #  if ('vh') in p : #just a check 
+      #     scale*=0.5
         if '2018' in p : outFile.write('%7.1f '%(intL2018*scale))
         if '2017' in p : outFile.write('%7.1f '%(intL2017*scale))
         if '2016' in p : outFile.write('%7.1f '%(intL2016*scale))
@@ -1808,7 +1813,7 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
   #obs proc/tag bins
   printObsProcBinLines()
   printMultiPdf()
-  printBRSyst()
+ # printBRSyst() # not needed for the limit
   printLumiSyst(year='2016')
   printLumiSyst(year='2017')
   printLumiSyst(year='2018')
@@ -1821,7 +1826,6 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
   if options.do_HHbbgg_systematics : 
      printTheorySystHHbbgg()
      printFlashggSysts()
-
 
 #if (len(tthCats) > 0 ):  printTTHSysts()
 #printTheorySysts()

@@ -26,7 +26,7 @@ def functionGF_kl_wrap (x,par):
 
 
 parser = OptionParser()
-parser.add_option("-y","--years", default='2016,2017,2018',help="years to consider")
+parser.add_option("-y","--years", default='2018',help="years to consider")
 parser.add_option("-c","--cats",default="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11")
 parser.add_option("--hhReweightDir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/categorizedTrees/kl_kt_finebinning/',help="hh reweighting directory with all txt files" )
 parser.add_option("--outdir", help="Output directory ")
@@ -73,21 +73,27 @@ y_theo_scale = 31.05*0.58*0.00227*2  #new most updated x-sec
 myFunc = r.TF1 ("myFunc", functionGF_kl_wrap, xmin, xmax, 1)
 myFunc.SetParameter(0, y_theo_scale) ### norm scale
 
-
-c1 = TCanvas("c","",1200,900)
-c1.Divide(4,3)
-colors=[2,4,r.kGreen+2]
-for cat_num,c in enumerate(cats):
-  c1.cd(cat_num+1)
+year=years[0]
+c1 = TCanvas("c","",900,300)
+c1.Divide(3,1)
+colors = [r.kBlue-6,r.kGreen+1,r.kOrange+0,r.kRed+0]  #reverse order
+cat_map = {}
+cat_map['MVA0'] = 'DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3'
+cat_map['MVA1'] = 'DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7'
+cat_map['MVA2'] = 'DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11'
+maximum = [2,6,8]
+mx_map = 'MX<385(GeV),385<MX<510(GeV),510<MX<600(GeV),MX>600(GeV),MX<330(GeV),330<MX<360(GeV),360<MX<540(GeV),MX>540(GeV),MX<330(GeV),330<MX<375(GeV),375<MX<585(GeV),MX>585(GeV)'.split(',')
+for mva_cat,mva in enumerate('MVA0,MVA1,MVA2'.split(',')):
+  c1.cd(mva_cat+1)
   graphs = []
-  legend = TLegend(0.3,0.55,0.55,0.85)
+  legend = TLegend(0.3,0.65,0.55,0.9)
   legend.SetBorderSize(0)
   legend.SetFillStyle(-1)
   legend.SetTextFont(42)
-  legend.SetTextSize(0.07)
-  fit = r.TF1("fit_%s"%c,"[0]*x*x+[1]*x+[2]",-30,30)
-  fit.SetLineColor(r.kOrange)
-  for y_num,year in enumerate(years) :
+  legend.SetTextSize(0.04)
+  #for cat_num,c in enumerate(cats):
+  for c_map_num,cat in enumerate(reversed(cat_map[mva].split(','))):
+    c = cat#real category 
     n = len(kl_dependency[c][year]['kl'])
     kl_array, rew_array = array( 'd' ), array( 'd' )
     for i in range(0,n):
@@ -96,31 +102,23 @@ for cat_num,c in enumerate(cats):
       yield_ratio = kl_dependency[c][year]['yeild_change'][i]*myFunc.Eval(kl_array[i])
       rew_array.append(yield_ratio)
     gr = TGraph( n, kl_array, rew_array )
-    if y_num==0 : gr.SetTitle(c)
-    gr.SetMarkerStyle(21+y_num)
-    gr.SetMarkerColor(colors[y_num])
+    if c_map_num==0 : gr.SetTitle(mva)
+    gr.SetMarkerStyle(20+c_map_num)
+    gr.SetMarkerSize(0.6)
+    gr.SetMarkerColor(colors[c_map_num])
+    gr.GetHistogram().SetMaximum(maximum[mva_cat])          
     gr.GetXaxis().SetTitle( '#kappa_{#lambda}=#lambda_{HHH}/#lambda_{SM}' )
-    gr.GetYaxis().SetTitle( 'yields scaling' )
+    gr.GetYaxis().SetTitle( 'Signal yields' )
     gr.GetXaxis().SetTitleSize(0.047)
-    gr.GetYaxis().SetTitleSize(0.047)
-    if y_num==0 : gr.Draw("AP")
+    if c_map_num==0 : gr.Draw("AP")
     else : gr.Draw('Psame')
     r.gDirectory.Append(gr)
     graphs.append(gr)
-    legend.AddEntry(gr,year,"P")
-    if year=='2018':
-       gr.Fit("fit_%s"%c)
-       kl_fit[c]['p0'] = fit.GetParameter(0) 
-       kl_fit[c]['p1'] = fit.GetParameter(1) 
-       kl_fit[c]['p2'] = fit.GetParameter(2) 
-  legend.AddEntry(fit,"Fit ax^{2}+bx+c","L")
+    legend.AddEntry(gr,cat.replace("DoubleHTag_","CAT ")+', '+mx_map[int(cat[-1])],"P")
   legend.Draw("same")
   r.gDirectory.Append(legend)
-  r.gDirectory.Append(fit)
 c1.Update()
 c1.Draw()
-out_name = '%s/yeilds_ratio_kl_xsec_%s'%(options.outdir,options.outtag)
+out_name = '%s/yeilds_ratio_kl_xsec_%s_study'%(options.outdir,options.outtag)
 c1.Print( out_name+'.pdf','pdf')
 
-with open(out_name+"_fitparams.json","w") as fit_json:
-  json.dump(kl_fit,fit_json)

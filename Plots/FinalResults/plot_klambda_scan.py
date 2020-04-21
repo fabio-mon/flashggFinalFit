@@ -48,16 +48,20 @@ def redrawBorder():
 
 def getVals(fname):
 	fIn = ROOT.TFile.Open(fname)
-	tIn = fIn.Get('limit')
-	if tIn.GetEntries() != 5:
-		print "*** WARNING: cannot parse file", fname, "because nentries != 5"
-		raise RuntimeError('cannot parse file')
-	vals = []
-	for i in range(0, tIn.GetEntries()):
-		tIn.GetEntry(i)
-		qe = tIn.quantileExpected
-		lim = tIn.limit
-		vals.append((qe,lim))
+  	vals = []
+	if fIn :
+		tIn = fIn.Get('limit')
+		if tIn.GetEntries() < 5:
+			print "*** WARNING: cannot parse file", fname, "because nentries != 5"
+			raise RuntimeError('cannot parse file')
+		for i in range(0, tIn.GetEntries()):
+			tIn.GetEntry(i)
+			qe = tIn.quantileExpected
+			lim = tIn.limit
+			vals.append((qe,lim))
+	else :
+		for qe in [0.025,0.16,0.5,0.84,0.975,0.]:
+			vals.append((qe,2.))
 	return vals
 
 def functionGF(kl, kt, c2, cg, c2g):
@@ -75,6 +79,24 @@ def functionGF(kl, kt, c2, cg, c2g):
 def functionGF_kl_wrap (x,par):
 	return par[0]*functionGF(x[0], 1., 0, 0, 0)
 
+
+def eval_nnlo_xsec_ggF(kl):
+   SF = 1.115  #1.115 is sigma_NNLO+FTapprox / sigma_NLO for SM = 31.05/27.84
+   #fit to the parabola  
+   A = 62.5339
+   eA = 2.9369
+   B = -44.3231
+   eB = 1.9286
+   C = 9.6340
+   eC = 0.5185
+   
+   return SF*(A+B*kl+C*kl*kl)   
+
+def nnlo_xsec_ggF_kl_wrap(x,par):
+	return par[0]*eval_nnlo_xsec_ggF(x[0])
+
+
+
 ################################################################################################
 ###########OPTIONS
 parser = OptionParser()
@@ -83,6 +105,7 @@ parser.add_option("--indir", help="Input directory ")
 parser.add_option("--outdir", help="Output directory ")
 parser.add_option("--outtag", help="Output tag ")
 parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=False)
+parser.add_option("--nlo", action="store_true",help="NLO samples (need to normalize to cross section) ",default=False)
 (options,args)=parser.parse_args()
 ###########
 ###CREATE TAGS
@@ -104,6 +127,7 @@ mg = ROOT.TMultiGraph()
 ### signals are normalsed to 1fb already
 scaleToXS = 1. # in fb for limit in xs of HH -> bbbb
 y_theo_scale = 31.05*0.58*0.00227*2  #new most updated x-sec
+BR_hhbbgg = 0.58*0.00227*2
 
 gr2sigma = ROOT.TGraphAsymmErrors()
 gr1sigma = ROOT.TGraphAsymmErrors()
@@ -129,8 +153,9 @@ for ikl in range(0,rew_dict['Nkl']):
 		fname = options.indir + '/' + 'higgsCombine_kl_%s_kt_%s_%s.AsymptoticLimits.mH125.root'%(kl_str,kt_str,options.outtag)
 		#fname = options.indir + '/' + 'higgsCombine_kl_%s_kt_%s.Asymptotic.mH125.root'%(kl_str,kt_str)
 		vals  = getVals(fname)
+		if options.nlo :  scaleToXS = eval_nnlo_xsec_ggF(kl)*BR_hhbbgg
 		if not options.unblind : obs   = scaleToXS*0.0 ## FIXME
-		else : obs   = scaleToXS*vals[5][1] ## ??? which one
+		else : obs   = scaleToXS*vals[5][1] 
 		m2s_t = scaleToXS*vals[0][1]
 		m1s_t = scaleToXS*vals[1][1]
 		exp   = scaleToXS*vals[2][1]
@@ -176,6 +201,7 @@ for ikl in range(0,rew_dict['Nkl']):
 # gr2sigma.SetPointError(ipt, 0,0,m2s,p2s)
 ptsList.sort()
 exp_list = []
+obs_list = []
 xval_list = []
 for ipt, pt in enumerate(ptsList):
 	xval = pt[0]
@@ -188,6 +214,7 @@ for ipt, pt in enumerate(ptsList):
 
 	grexp.SetPoint(ipt, xval, exp)
 	exp_list.append(exp)
+	obs_list.append(obs)
 	xval_list.append(xval)
 	grobs.SetPoint(ipt, xval, obs)
 	gr1sigma.SetPoint(ipt, xval, exp)
@@ -196,6 +223,7 @@ for ipt, pt in enumerate(ptsList):
 	gr2sigma.SetPointError(ipt, 0,0,m2s,p2s)
 
 exp_inter = interp1d(xval_list, exp_list, kind='cubic')
+obs_inter = interp1d(xval_list, obs_list, kind='cubic')
 
 ##############Create functions from median expected and observed
 #def graph2func(xval):
@@ -359,42 +387,50 @@ yt=1
 BR = 1
 # myFunc =  ROOT.TF1("myFunc","(2.09*[0]*[0]*[0]*[0] + 0.28*[0]*[0]*x*[0]*x*[0] -1.37*[0]*[0]*[0]*x*[0])*2.44185/[1]",xmin,xmax);
 myFunc = ROOT.TF1 ("myFunc", functionGF_kl_wrap, xmin, xmax, 1)
+if options.nlo : 
+	myFunc = ROOT.TF1 ("myFunc", nnlo_xsec_ggF_kl_wrap, xmin, xmax, 1)
+	y_theo_scale = BR_hhbbgg# already scaled to cross section
 myFunc.SetParameter(0, y_theo_scale) ### norm scale
-# myFunc.SetParameter(0,yt); 
-# myFunc.SetParameter(1,BR); 
-#myFunc.SetParameter(2,yt); 
 graph = ROOT.TGraph(myFunc);
 ci = ROOT.TColor.GetColor("#ff0000");
 graph.SetLineColor(ci);
 graph.SetLineWidth(2);
 # graph.Draw("l");
-nP = int((kl_max-kl_min)*10.0)
+divider = 1000.
+nP = int((kl_max-kl_min)*divider)
 Graph_syst_Scale =  ROOT.TGraphAsymmErrors(nP)
 for i in range(nP) : 
-	x = kl_min+(i*1.)/10.
-	Graph_syst_Scale_x=(kl_min+(i*1.)/10.)
-	Graph_syst_Scale_y=functionGF_kl_wrap([x], [y_theo_scale])
+	x = kl_min+(i*1.)/divider
+	Graph_syst_Scale_x=(kl_min+(i*1.)/divider)
+	if options.nlo : Graph_syst_Scale_y=nnlo_xsec_ggF_kl_wrap([x], [y_theo_scale])
+	else :Graph_syst_Scale_y=functionGF_kl_wrap([x], [y_theo_scale])
 	theory_line.append(Graph_syst_Scale_y)
 	xval_line.append(x)
 	Graph_syst_Scale_x_err=(0)
-	Graph_syst_Scale_y_errup    = functionGF_kl_wrap([x], [y_theo_scale])*0.054
-	Graph_syst_Scale_y_errdown  = functionGF_kl_wrap([x], [y_theo_scale])*0.070
+	if options.nlo :  
+		Graph_syst_Scale_y_errup    = nnlo_xsec_ggF_kl_wrap([x], [y_theo_scale])*0.045
+		Graph_syst_Scale_y_errdown  = nnlo_xsec_ggF_kl_wrap([x], [y_theo_scale])*0.064
+	else :  
+		Graph_syst_Scale_y_errup    = functionGF_kl_wrap([x], [y_theo_scale])*0.045
+		Graph_syst_Scale_y_errdown  = functionGF_kl_wrap([x], [y_theo_scale])*0.064
 	Graph_syst_Scale.SetPoint(i,Graph_syst_Scale_x,Graph_syst_Scale_y)
 	Graph_syst_Scale.SetPointError(i,Graph_syst_Scale_x_err,Graph_syst_Scale_x_err,Graph_syst_Scale_y_errup,Graph_syst_Scale_y_errdown)
 Graph_syst_Scale.SetLineColor(ROOT.kRed)
 Graph_syst_Scale.SetFillColor(ROOT.kRed)
 Graph_syst_Scale.SetFillStyle(3001)
 exp_line = exp_inter(xval_line)
+obs_line = obs_inter(xval_line)
 
 print 'Expected Median and theory xsec'
 for ipt in range(0,grexp.GetN()):
    x = ROOT.Double(0)
    y = ROOT.Double(0)
    grexp.GetPoint(ipt, x, y)
-   print x,y,functionGF_kl_wrap([x],[y_theo_scale])
-print theory_line,exp_line
 idx = np.argwhere(np.diff(np.sign(exp_line-theory_line ))).flatten()
 print np.array(xval_line)[idx], np.array(theory_line)[idx],np.array(exp_line)[idx]
+print 'Observed :'
+idx = np.argwhere(np.diff(np.sign(obs_line-theory_line ))).flatten()
+print np.array(xval_line)[idx], np.array(theory_line)[idx],np.array(obs_line)[idx]
 
 # ytbis = 2
 # # Graph_syst_Scale2 =  ROOT.TGraphAsymmErrors(nP)

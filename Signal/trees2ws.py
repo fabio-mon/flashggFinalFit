@@ -179,14 +179,14 @@ def get_options():
     parser = OptionParser()
     #parser.add_option("--inp-files",type='string',dest='inp_files',default='qqh,tth,vh,ggh')  
     parser.add_option("--inp-files",type='string',dest='inp_files',default='hh')  
-    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/24_01_2020/trees_systematics/')
-    parser.add_option("--out-dir",type='string',dest="out_dir",default='/scratch/nchernya/HHbbgg/24_01_2020/workspaces_systematics/')
+    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/04_02_2020/trees_systematics/')
+    parser.add_option("--out-dir",type='string',dest="out_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/workspaces_systematics/')
     parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
     parser.add_option("--nosysts",action="store_true", dest="nosysts", default=False)
     parser.add_option("--year",type='string',dest="year",default='2016')
     parser.add_option("--add_benchmarks",action="store_true", dest="add_benchmarks",default=False)
     parser.add_option("--config",type='string',dest="config",default='/work/nchernya/DiHiggs/inputs/20_12_2019/reweighting_normalization_18_12_2019.json')
-    parser.add_option("--btag_config",type='string',dest="btag_config",default='/work/nchernya/DiHiggs/inputs/20_12_2019/btagSF_15_01_2019.json')
+    parser.add_option("--btag_config",type='string',dest="btag_config",default='/work/nchernya/DiHiggs/inputs/20_12_2019/btagSF_08_04_2020.json')
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 
@@ -244,7 +244,10 @@ for num,f in enumerate(input_files):
          #data = pd.DataFrame(tree2array(tfile.Get("tagsDumper/trees/%s"%name)))
          if (tfile.Get("tagsDumper/trees/%s"%name).GetEntries())!=0 :
             data = rpd.read_root(tfilename,'tagsDumper/trees/%s'%name)
-            if 'hh' in f and year=='2016': data =data.append(rpd.read_root(opt.inp_dir+"output_hh_2016_node_5_12.root",'tagsDumper/trees/%s'%name),ignore_index=True)  #just a tmp , ignore
+           # data['leadingJet_pt_Mjj'] = data['leadingJet_pt']/data['Mjj']
+           # data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/1.82 for all categories
+
+            #if 'hh' in f and year=='2016': data =data.append(rpd.read_root(opt.inp_dir+"output_hh_2016_node_5_12.root",'tagsDumper/trees/%s'%name),ignore_index=True)  #just a tmp , ignore
             if cat_num == 0 :  data_structure = pd.DataFrame(data=None, columns=data.columns) 
          else :
             "USER WARNING : 0 events in ",f," syst ",syst," ,cat = ",cat 

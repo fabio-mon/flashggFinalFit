@@ -8,7 +8,7 @@ import json
 
 #date = '06_05_2019' 
 #date = '25_10_2019'
-date = '24_01_2020'
+date = '18_02_2020'
 #date = '03_02_2020'
 
 #filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/CMS-HGG_sigfit_all2016_2017_%s.root'%date
@@ -77,38 +77,48 @@ filename_bkg_2016 = '/work/nchernya/DiHiggs/inputs/%s/output_DoubleEG_2016_%s.ro
 filename_bkg_2017 = '/work/nchernya/DiHiggs/inputs/%s/output_DoubleEG_2017_%s.root'%(date,date)
 filename_bkg_2018 = '/work/nchernya/DiHiggs/inputs/%s/output_DoubleEG_2018_%s.root'%(date,date)
 filename_bkg_total = '/work/nchernya/DiHiggs/inputs/%s/output_DoubleEG_2016_2017_2018_%s.root'%(date,date)
-filename_bkg_MCbg = '/work/nchernya/DiHiggs/inputs/%s/output_BG_MCbjets_2016_2017_2018_%s.root'%(date,date)
+filename_bkg_MC = '/work/nchernya/DiHiggs/inputs/%s/output_BG_MCbg_2016_2017_2018_%s.root'%(date,date)
+filename_bkg_MCbjets = '/work/nchernya/DiHiggs/inputs/%s/output_BG_MCbgbjets_2016_2017_2018_%s.root'%(date,date)
 #years=['2016','2017','2018','Total']
 #years=['2016']
-years=['Total','MC BGbjets']
+years=['Total','MC BGbjets', 'MC BG']
 print 'Data with blinded 115 < Mgg < 135'
 #for num,name in enumerate([filename_bkg_2016,filename_bkg_2017,filename_bkg_2018,filename_bkg_total]):
 #for num,name in enumerate([filename_bkg_2016]):
-for num,name in enumerate([filename_bkg_total,filename_bkg_MCbg]):
+for num,name in enumerate([filename_bkg_total,filename_bkg_MCbjets,filename_bkg_MC]):
 	tfile = TFile(name)
 	wsname_bkg = 'tagsDumper/cms_hgg_13TeV'
 	ws_bkg = tfile.Get(wsname_bkg)
 	sum_bkg=0.
+	sum_bkg_sqr=0.
+	sum_bkg_error=0.
 	print 'Data %s\t'%years[num],
 	entries_per_cat['Data'+years[num]] = [] 
 	for cat in range(0,num_cat):
 		catname = 'Data_13TeV_DoubleHTag_%d'%(cat)
 		entries = ws_bkg.data(catname).sumEntries()
 		entries_blinded=0
+		entries_blinded_sqr=0
+		entries_blinded_error=0
 		for event in range(0,ws_bkg.data(catname).numEntries()):
 			if (ws_bkg.data(catname).get(event).getRealValue("CMS_hgg_mass") > 135.) or (ws_bkg.data(catname).get(event).getRealValue("CMS_hgg_mass") < 115.):
-				#entries_blinded+=1
+				entries_blinded_sqr+=(ws_bkg.data(catname).weight())**2
 				entries_blinded+=ws_bkg.data(catname).weight()
+				entries_blinded_error+=ws_bkg.data(catname).weightError()
 		sum_entries_bkg[catname] = entries
 		sum_bkg+=entries_blinded
-	#	print '%d\t'%(entries),'&',
-		print '%d\t'%(entries_blinded),'%s'%symbol,
+		sum_bkg_sqr+=entries_blinded_sqr
+		sum_bkg_error+=entries_blinded_error
+		print '%d \pm %.1f\t'%(entries_blinded,sqrt(entries_blinded_sqr)),'%s'%symbol,
+		#print '%d +- %.1f\t'%(entries_blinded,sqrt(entries_blinded_sqr)),'%s'%symbol,
 		entries_per_cat['Data'+years[num]].append(entries_blinded)
 	if symbol=='&' : 
-	  print '%d\t \\\\'%(sum_bkg)
-	else : print '%d\t'%(sum_bkg)
+	  print '%d \pm %1.f\t \\\\'%(sum_bkg,sqrt(sum_bkg_sqr))
+	  #print '%d +- %.1f\t \\\\'%(sum_bkg,sqrt(sum_bkg_sqr))
+	else : print '%d \pm %.1f\t'%(sum_bkg,sqrt(sum_bkg_sqr))
+	#else : print '%d +- %.1f\t'%(sum_bkg,sqrt(sum_bkg_sqr))
 
 
 
-result = open("output_txt/full_yields_latex_%s_test.txt"%date,"w")
+result = open("output_txt/full_yields_latex_%s.txt"%date,"w")
 result.write(json.dumps(entries_per_cat))

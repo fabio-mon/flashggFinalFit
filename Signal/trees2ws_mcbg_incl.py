@@ -10,7 +10,7 @@ from root_numpy import tree2array
 from optparse import OptionParser
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def add_mc_vars_to_workspace(ws=None, systematics_labels=[],add_benchmarks = False):
+def add_mc_vars_to_workspace(ws=None,mjjLow = 70, systematics_labels=[],add_benchmarks = False):
   IntLumi = ROOT.RooRealVar("IntLumi","IntLumi",1000)
   IntLumi.setConstant(True)
   getattr(ws, 'import')(IntLumi)
@@ -25,7 +25,7 @@ def add_mc_vars_to_workspace(ws=None, systematics_labels=[],add_benchmarks = Fal
   CMS_hgg_mass.setBins(101)
   getattr(ws, 'import')(CMS_hgg_mass)
 
-  Mjj = ROOT.RooRealVar("Mjj","Mjj",125,70,190)
+  Mjj = ROOT.RooRealVar("Mjj","Mjj",125,mjjLow,190)
   Mjj.setConstant(False)
   #Mjj.setBins(480)
   Mjj.setBins(101)
@@ -123,14 +123,21 @@ def get_options():
 
     parser = OptionParser()
     #parser.add_option("--inp-files",type='string',dest='inp_files',default='DiPhotonJetsBox_,GJet_Pt-20to40_,GJet_Pt-40toInf_')  
-  #  parser.add_option("--inp-files",type='string',dest='inp_files',default='DiPhotonJetsBox_,DiPhotonJetsBox1BJet,DiPhotonJetsBox2BJets,GJet_Pt-20to40_,GJet_Pt-40toInf_')  
-    parser.add_option("--inp-files",type='string',dest='inp_files',default='DiPhotonJetsBox_,GJet_Pt-20to40_,GJet_Pt-40toInf_')  
-    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/04_02_2020/trees/')
-    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/MCbg_workspace_wo_bjets/')
+    #parser.add_option("--inp-files",type='string',dest='inp_files',default='DiPhotonJetsBox_,DiPhotonJetsBox1BJet,DiPhotonJetsBox2BJets,GJet_Pt-20to40_,GJet_Pt-40toInf_')  
+    parser.add_option("--inp-files",type='string',dest='inp_files',default='DiPhotonJetsBox_,DiPhotonJetsBox1BJet,DiPhotonJetsBox2BJets')  
+  #  parser.add_option("--inp-files",type='string',dest='inp_files',default='DiPhotonJetsBox_,GJet_Pt-20to40_,GJet_Pt-40toInf_')  
+    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/vbfhh_mva095/')
+    #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/MCbgbjets_workspace_90GeV/')
+    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/27_03_2020/')
     #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/ivan_ntuples_13_02_2020/')
     #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/15_02_2020/')
+    parser.add_option("--outtag",type='string',dest="outtag",default='_cats70GeV')
     parser.add_option("--year",type='string',dest="year",default='2016')
-    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
+    #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
+    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0')
+    #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9')
+    #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_10,DoubleHTag_11')
+    parser.add_option("--MjjLow",type='float',dest="MjjLow",default='70')
     #parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.44,0.67,0.79,1')
     #parser.add_option("--MXcats",type='string',dest="MXcats",default='250,385,470,640,10000,250,345,440,515,10000,250,330,365,545,10000')
    # parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.248,0.450,0.728,1')
@@ -140,13 +147,14 @@ def get_options():
     #parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.33,0.55,0.68,1')
     #parser.add_option("--MXcats",type='string',dest="MXcats",default='250,360,470,600,10000,250,330,365,540,10000,250,330,360,615,10000')
     parser.add_option("--ttHScore",type='float',dest="ttHScore",default=0.26)
+    parser.add_option("--doCategorization",action="store_true", dest="doCategorization",default=False)
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 
-#treeDirName = 'tagsDumper/trees/'
-treeDirName = ''
+treeDirName = 'tagsDumper/trees/'
+#treeDirName = ''
 SF = 2.9
-remove_diphoton_overlap = False
+remove_diphoton_overlap = True
 lumi_dict = {}
 lumi_dict['2016'] = 35.9 
 lumi_dict['2017'] = 41.5
@@ -157,7 +165,7 @@ cats = opt.cats.split(',')
 MVAcats = opt.MVAcats.split(',')
 MXcats = opt.MXcats.split(',')
 nMVA =len(MVAcats)-1 
-nMX = int(len(cats)/(len(MVAcats)-1))
+nMX = int(12/(len(MVAcats)-1))
 cat_def = {}
 for mva_num in range(0,nMVA):
   for mx_num in range(0,nMX):
@@ -194,7 +202,7 @@ for num,f in enumerate(input_files):
    datasets=[]
    ws = ROOT.RooWorkspace("cms_hgg_13TeV", "cms_hgg_13TeV")
    #Assemble roorealvariable set
-   add_mc_vars_to_workspace( ws,'' )  # do not add them for the main systematics file
+   add_mc_vars_to_workspace( ws,opt.MjjLow,'' )  # do not add them for the main systematics file
    for cat in cats : 
        print 'doing cat ',cat
        finalname = final_names[num]+'_'+cat
@@ -202,7 +210,11 @@ for num,f in enumerate(input_files):
       # initial_name = "bbggSelectionTree" #ivan
        #data = pd.DataFrame(tree2array(tfile.Get("tagsDumper/trees/%s"%initial_name))).
        #selection = "(MX <= %.2f and MX > %.2f) and (HHbbggMVA <= %.2f and HHbbggMVA > %.2f) and (ttHScore >= %.2f) and ((nElectrons2018+nMuons2018)==0)"%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
-       selection = "(MX <= %.2f and MX > %.2f) and (MVAOutputTransformed <= %.2f and MVAOutputTransformed > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
+       selection = "(Mjj>0)"
+       if opt.doCategorization : selection = "(MX <= %.2f and MX > %.2f) and (MVAOutputTransformed <= %.2f and MVAOutputTransformed > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
+       if not opt.doCategorization : 
+         initial_name = target_names[num]+'_'+cat
+      # if '11' in cat or '10' in cat : selection+="and (Mjj>=90)"
        print 'doing selection ', selection
        #data = rpd.read_root(tfilename,'tagsDumper/trees/%s'%initial_name).query(selection)
        data = rpd.read_root(tfilename,'%s'%(treeDirName+initial_name)).query(selection)
@@ -210,7 +222,6 @@ for num,f in enumerate(input_files):
        data['subleadingJet_pt_Mjj'] = data['subleadingJet_pt']/data['Mjj']
      #  data = data.query("(leadingJet_pt_Mjj>0.4)")  #1/2.5 for all categories
        data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/2.5 for all categories
-       #data = data.query("(subleadingJet_pt_Mjj>0.37)")  #1/2.5 for all categories
        #if ('3' in cat) or ('7' in cat ) or ('11' in cat ) : 
        #    data = data.query("(leadingJet_pt_Mjj>0.4)")  #1/2.7 for all categories
        if remove_diphoton_overlap : 
@@ -220,7 +231,7 @@ for num,f in enumerate(input_files):
  
        datasets += add_dataset_to_workspace( data, ws, finalname,SF,lumi_dict[year]) 
          
-   f_out = ROOT.TFile.Open("%s/%s_%s.root"%(opt.out_dir,input_files[num],year),"RECREATE")
+   f_out = ROOT.TFile.Open("%s/%s%s_%s.root"%(opt.out_dir,input_files[num],opt.outtag,year),"RECREATE")
    dir_ws = f_out.mkdir("tagsDumper")
    dir_ws.cd()
    ws.Write()

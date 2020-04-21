@@ -64,6 +64,14 @@ https://github.com/chernyavskaya/flashggFinalFit/blob/fullRunII_Oct2019/Signal/r
 https://github.com/chernyavskaya/flashggFinalFit/blob/fullRunII_Oct2019/Signal/runSignalScripts_bbgg.sh#L1
 You do not have to use it, you can run each step one by one if you wish. I submit jobs for each process and each category, but you can run it locally https://github.com/chernyavskaya/flashggFinalFit/blob/fullRunII_Oct2019/Signal/runSignalScripts_bbgg.sh#L25
 
+Steps you need to do in order :
+```
+doFTEST=1
+doFIT=1
+merge everything in one file : python mergeWorkspaces.py final_Mgg_workspace.root all_workspaces_you_just_created.root
+doPACKAGER=1 (optional, for pretty plots only)
+```
+
 You have to edit all relevant info : input dir, input files, processes, etc :
 https://github.com/chernyavskaya/flashggFinalFit/blob/fullRunII_Oct2019/Signal/runSignalScripts_bbgg.sh#L17
 https://github.com/chernyavskaya/flashggFinalFit/blob/fullRunII_Oct2019/Signal/runSignalScripts_bbgg.sh#L9
@@ -83,7 +91,17 @@ Now if everything went well, you fill have the final workspaces(signal and singl
 ### Running Signal and Single Higgs bkg models for Mjj: 
 ```
 ./bin/MjjSignalFit -t models_file.rs -d input_dir  -p plot_dir --year 2017  --procs tth  -o outdir -i inputfiles
+
 ```
+My command for signal :
+```
+./bin/MjjSignalFit -t flashggFinalFit/MetaData_HHbbgg/models_2D_higgs_mjj70_16_02_2020.rs -d input_dir  -p plot_dir --year 2017  --procs hh_node_SM  -o outdir 
+```
+My command for single Higgs :
+```
+./bin/MjjSignalFit -t flashggFinalFit/MetaData_HHbbgg/models_2D_higgs_mjj70_16_02_2020.rs -d input_dir  -p plot_dir --year 2017  --procs tth,ggh,vh,qqh  -o outdir -m true
+```
+
 All the available options are summarized in the OptionParser : 
 https://github.com/chernyavskaya/flashggFinalFit/blob/fullRunII_approval1D/Signal/test/MjjSignalFit.cpp#L70
 
@@ -109,4 +127,4 @@ python createMjjMggModel.py -.... options for input files, etc
 ```
 https://github.com/chernyavskaya/flashggFinalFit/blob/fullRunII_approval1D/Signal/test/createMjjMggModel.py
 
-Done! Now you can prepared the datacards.
+Done! Now you can prepare the datacards.

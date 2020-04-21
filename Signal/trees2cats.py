@@ -15,11 +15,13 @@ def get_options():
     parser = OptionParser()
     #parser.add_option("--inp-files",type='string',dest='inp_files',default='qqh,tth,vh,ggh')  
     parser.add_option("--inp-files",type='string',dest='inp_files',default='hh')  
-    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/24_01_2020/trees/')
-    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/03_02_2020/categorizedTrees/')
+    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/')
+    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/categorizedTrees/')
+    #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/24_01_2020/trees/')
+    #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/03_02_2020/categorizedTrees/')
     parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
-    parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.44,0.67,0.79,1')
-    parser.add_option("--MXcats",type='string',dest="MXcats",default='250,385,470,640,10000,250,345,440,515,10000,250,330,365,545,10000')
+    parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.37,0.62,0.78,1')
+    parser.add_option("--MXcats",type='string',dest="MXcats",default='250,385,510,600,10000,250.,330,360,540,10000,250,330,375,585,10000')  #2d
     #parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.33,0.55,0.68,1')
     #parser.add_option("--MXcats",type='string',dest="MXcats",default='250,360,470,600,10000,250,330,365,540,10000,250,330,360,615,10000')
     parser.add_option("--ttHScore",type='float',dest="ttHScore",default=0.26)
@@ -28,6 +30,8 @@ def get_options():
     parser.add_option("--add_gen",action="store_true", dest="add_gen",default=False)
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+#treeDirName = 'tagsDumper/trees/'
+treeDirName = ''
 
 (opt,args) = get_options()
 year=opt.year
@@ -63,8 +67,8 @@ data_all_cats = []
 gen_data_all_cats = []
 for num,f in enumerate(input_files):
  print 'doing file ',f,input_names[num]
- tfile = ROOT.TFile(opt.inp_dir + "output_"+f+"_%s.root"%year)
- tfilename = opt.inp_dir + "output_"+f+"_%s.root"%year
+ tfile = ROOT.TFile(opt.inp_dir + "output_"+f+"_%s_gen.root"%year)
+ tfilename = opt.inp_dir + "output_"+f+"_%s_gen.root"%year
 ############Adding Gen info#############
  if opt.add_gen :
    initial_name = input_names[num]+'_NoTag_0'
@@ -82,9 +86,13 @@ for num,f in enumerate(input_files):
    print 'doing cat ',cat
    name = input_names[num]+'_'+cat
    initial_name = input_names[num]+'_DoubleHTag_0'
-   selection = "(MX <= %.2f and MX > %.2f) and (HHbbggMVA <= %.2f and HHbbggMVA > %.2f) and (ttHScore >= %.2f) and ((nElectrons2018+nMuons2018)==0)"%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
-   if (tfile.Get("tagsDumper/trees/%s"%initial_name).GetEntries())!=0 :
-       data = rpd.read_root(tfilename,'tagsDumper/trees/%s'%initial_name).query(selection)
+   #selection = "(MX <= %.2f and MX > %.2f) and (HHbbggMVA <= %.2f and HHbbggMVA > %.2f) and (ttHScore >= %.2f) and ((nElectrons2018+nMuons2018)==0)"%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
+   selection = "(MX <= %.2f and MX > %.2f) and (MVAOutputTransformed <= %.2f and MVAOutputTransformed > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
+   if (tfile.Get(treeDirName+"%s"%initial_name).GetEntries())!=0 :
+       data = rpd.read_root(tfilename,treeDirName+'%s'%initial_name).query(selection)
+       data['leadingJet_pt_Mjj'] = data['leadingJet_pt']/data['Mjj']
+       data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/2.5 for all categories
+       data = data.astype({"benchmark_reweight_SM": np.float32, "weight": np.float32, "genAbsCosThetaStar_CS": np.float32, "genMhh": np.float32}) #this is needed if I use trees not from flashgg as the tagsDumper ones
        if cat_num == 0 :  data_structure = pd.DataFrame(data=None, columns=data.columns) 
    else :
        "USER WARNING : 0 events in ",f," syst ",syst," ,cat = ",cat 
@@ -111,7 +119,7 @@ for num,f in enumerate(input_files):
      gen_data_all_cats[df_num+1].to_root(f_out_name,key='gen_'+name, mode=mode)
      
 
- f_tree_name = "%s/%s_treesCats_test.root"%(opt.out_dir,outname)
+ f_tree_name = "%s/%s_treesCats.root"%(opt.out_dir,outname)
  f_tree = ROOT.TFile.Open(f_out_name, "READ")
  out_file = ROOT.TFile.Open(f_tree_name, "RECREATE")
  outdir = out_file.mkdir("tagsDumper")

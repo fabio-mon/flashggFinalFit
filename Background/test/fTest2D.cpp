@@ -877,9 +877,10 @@ void BkgMultiModelFitAllOrders(TString OutputFileName, std::string jsonForEnvelo
 	      mggBkgTmp = getPdf(pdfsModel,functionClasses[mggfunc],mggfunc_ord, TString::Format("bkg_mgg_for%s%d_%s",label[mjjfunc],mjjfunc_ord,flashggCats_[c].c_str()));
 	      mjjBkgTmp = getPdf(pdfsModel_1,functionClasses[mjjfunc],mjjfunc_ord, TString::Format("bkg_mjj_for%s%d_%s",label[mggfunc],mggfunc_ord,flashggCats_[c].c_str()));
 
-		   double gofProbMgg =0; 
+/*		   double gofProbMgg =0; 
 		   double gofProbMjj =0; 
-/*		   int fitStatus=0;
+		   int fitStatus=0;
+>>>>>>> origin/fullRunII_unblindedGGF
          int proj=1;
 			plot(mgg,mggBkgTmp,data[c],Form("%s/%s%d_mgg_gof_%s.pdf",outDir.c_str(),label[mggfunc],mggfunc_ord,flashggCats_[c].c_str()),flashggCats_,fitStatus,&gofProbMgg,proj);
 			if (! ((gofProbMgg > 0.05) || (mggfunc_ord == func_ordmgg[c][mggfunc]) )){   // Good looking fit or one of our regular truth functions

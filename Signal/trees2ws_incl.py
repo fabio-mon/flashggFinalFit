@@ -125,7 +125,7 @@ def apply_selection(data=None,reco_name=None):
   #recobin_data = recobin_data[((recobin_data['mgg']>=100.)&(recobin_data['mgg']<=180.))]
   return recobin_data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],btag_norm = 1.,add_benchmarks = False, benchmark_num = -1, benchmark_norm = 1.):
+def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],btag_norm = 1.,nlo_renormalization = 1.,add_benchmarks = False, benchmark_num = -1, benchmark_norm = 1.):
 
   #apply selection to extract correct recobin
   #recobin_data = apply_selecetion(data,selection_name)
@@ -153,9 +153,10 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],b
       data['weight'] *= data["benchmark_reweight_%s"%benchmark_num]/benchmark_norm
 
 #Restore normalization from the btag reshaping weights#
-  data['weight'] *= btag_norm  #undo for ivan
-  #data['weight'] /= data["btagReshapeWeight"] #undo btag weights for a test
+  data['weight'] *= btag_norm 
 #######################################################
+#Apply proper NNLO x BR for NLO samples, otherwise x 1. is applied
+  data['weight'] *= nlo_renormalization 
 
   #Fill the dataset with values
   for index,row in data.iterrows():
@@ -181,19 +182,35 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],b
 
   return [name]
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+def eval_nnlo_xsec_ggF(kl):
+   SF = 1.115  #1.115 is sigma_NNLO+FTapprox / sigma_NLO for SM = 31.05/27.84
+   #fit to the parabola  
+   A = 62.5339
+   eA = 2.9369
+   B = -44.3231
+   eB = 1.9286
+   C = 9.6340
+   eC = 0.5185
+   
+   return SF*(A+B*kl+C*kl*kl)   
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 def get_options():
 
     parser = OptionParser()
+    ###########################For final result before unblinding with VBF add lepton Veto #####################
     #parser.add_option("--inp-files",type='string',dest='inp_files',default='qqh,tth,vh,ggh')  
-    #parser.add_option("--inp-files2D",type='string',dest='inp_files2D',default='VBFHToGG_M-125_13TeV_powheg_pythia8,ttHToGG_M125_13TeV_powheg_pythia8,VHToGG_M125_13TeV_amcatnloFXFX_madspin_pythia8,GluGluHToGG_M-125_13TeV_powheg_pythia8')  
-    #parser.add_option("--inp-files2D",type='string',dest='inp_files2D',default='GluGluToHHTo2B2G_allnodes_no_unit_norm')  
-    parser.add_option("--inp-files",type='string',dest='inp_files',default='hh')  
-    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/04_02_2020/trees/')
-    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/')
-    #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/ivan_ntuples_13_02_2020/')
-    #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/15_02_2020/')
+    #parser.add_option("--inp-files",type='string',dest='inp_files',default='qqh,tth,vh,ggh,vbfhh')  
+    #parser.add_option("--inp-files",type='string',dest='inp_files',default='hh')  
+    parser.add_option("--inp-files",type='string',dest='inp_files',default='hh_nlo_cHHH0,hh_nlo_cHHH1,hh_nlo_cHHH2p45,hh_nlo_cHHH5')  
+    #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/04_02_2020/trees/')
+    #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/')
+    #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/nlo_fixed/')
+    #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/nlo_updated/')
+    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/trees_systematics/nlo/')
+    parser.add_option("--out-dir",type='string',dest="out_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/workspaces_systematics/')
     parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
+    #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0')
     #parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.44,0.67,0.79,1')
     #parser.add_option("--MXcats",type='string',dest="MXcats",default='250,385,470,640,10000,250,345,440,515,10000,250,330,365,545,10000')
    # parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.248,0.450,0.728,1')
@@ -208,11 +225,16 @@ def get_options():
     parser.add_option("--year",type='string',dest="year",default='2016')
     parser.add_option("--add_benchmarks",action="store_true", dest="add_benchmarks",default=False)
     parser.add_option("--config",type='string',dest="config",default='/work/nchernya/DiHiggs/inputs/20_12_2019/reweighting_normalization_18_12_2019.json')
-    parser.add_option("--btag_config",type='string',dest="btag_config",default='/work/nchernya/DiHiggs/inputs/20_12_2019/btagSF_15_01_2019.json')
+    parser.add_option("--btag_config",type='string',dest="btag_config",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/MetaData_HHbbgg/btagSF_08_04_2020.json')
+    parser.add_option("--LHEweight_rescale",type='string',dest="LHEweight_rescale",default='/work/nchernya/DiHiggs/inputs/18_02_2020/nlo/HH_NLO_gen_xsec_16_04_2020.json')
+    parser.add_option("--doNLO",action="store_true", dest="doNLO",default=False)
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
-#treeDirName = 'tagsDumper/trees/'
-treeDirName = ''
+
+BR_hhbbgg = 0.58*0.00227*2
+
+treeDirName = 'tagsDumper/trees/'
+#treeDirName = ''
 (opt,args) = get_options()
 year=opt.year
 if opt.nosysts : systematics = [''],[]
@@ -237,6 +259,7 @@ input_names = []
 target_names = []
 target_files = []
 btag_normalization_dict = json.loads(open(opt.btag_config).read())
+LHEweight_rescale_dict = json.loads(open(opt.LHEweight_rescale).read())
 normalization_file = open(opt.config).read()
 normalizations = json.loads(normalization_file)
 if opt.add_benchmarks : print 'Adding benchmarks'
@@ -244,13 +267,15 @@ if opt.add_benchmarks : print 'Adding benchmarks'
 for num,f in enumerate(input_files):
    name=f
    if 'hh_SM' in f and not opt.add_benchmarks: name='hh'
-   input_names.append(name+year+'_13TeV_125_13TeV')
-   if 'hh' in f and not opt.add_benchmarks:
-      target_names.append(f +'_generated_%s_13TeV'%year) 
-      target_files.append('output_' + f + '_generated_%s'%year )
-   else :
+   if not opt.doNLO : 
+      input_names.append(name+year+'_13TeV_125_13TeV')
       target_names.append(f +'_%s_13TeV'%year)
       target_files.append('output_' + f +'_%s'%year )
+   elif not 'vbfhh' in name :
+      input_names.append('hh'+year+'_13TeV_125_13TeV')
+      target = 'ggHH_kl_%s_kt_1'%(name[name.find('cHHH')+len('cHHH'):])
+      target_names.append(target +'_%s_13TeV'%year)
+      target_files.append('output_' + target +'_%s'%year )
 
 #opt.inp_dir = opt.inp_dir+'/' + year + '/'
 #opt.inp_dir = opt.inp_dir+'/rho_rew_'+year+ '_v2/' #ivan
@@ -279,21 +304,24 @@ for num,f in enumerate(input_files):
              name = input_names[num]+'_'+cat+'_'+syst
              initial_name = input_names[num]+'_DoubleHTag_0_' + syst
          else : 
-             name = input_names[num]+'_'+cat
-             initial_name = input_names[num]+'_DoubleHTag_0'
+             if 'vbfhh' in f :  name='VBFHHTo2B2G_CV_1_C2V_1_C3_1_TuneCP5_PSWeights_13TeV_madgraph_pythia8_13TeV_'+cat
+             else :
+                 name = input_names[num]+'_'+cat
+                 initial_name = input_names[num]+'_DoubleHTag_0'
        #  initial_name = 'bbggSelectionTree' #ivan
          #selection = "(MX <= %.2f and MX > %.2f) and (HHbbggMVA <= %.2f and HHbbggMVA > %.2f) and (ttHScore >= %.2f)and ((nElectrons2018+nMuons2018)==0)"%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
-         selection = "(MX <= %.2f and MX > %.2f) and (MVAOutputTransformed <= %.2f and MVAOutputTransformed > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
+         #if opt.doCategorization : selection = "(MX <= %.2f and MX > %.2f) and (MVAOutputTransformed <= %.2f and MVAOutputTransformed > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
+         if opt.doCategorization : selection = "(MX <= %.2f and MX > %.2f) and (HHbbggMVA <= %.2f and HHbbggMVA > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
          if not opt.doCategorization : 
 				initial_name = name
-				selection = ""
+				selection = "(Mjj>0)"
          #data = pd.DataFrame(tree2array(tfile.Get("tagsDumper/trees/%s"%name)))
          if (tfile.Get("%s"%(treeDirName+initial_name)).GetEntries())!=0 :
             data = rpd.read_root(tfilename,'%s'%(treeDirName+initial_name)).query(selection)
             data['leadingJet_pt_Mjj'] = data['leadingJet_pt']/data['Mjj']
             data['subleadingJet_pt_Mjj'] = data['subleadingJet_pt']/data['Mjj']
             data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/2.5 for all categories
-            #if ('3' in cat) or ('7' in cat ) or ('11' in cat ) : data = data.query("(leadingJet_pt_Mjj>0.4)")  #1/2.5 for all categories
+            if opt.doNLO : data = data.query("(abs(genweight)<0.1)") #remove crazy LHE weights 
             if cat_num == 0 :  data_structure = pd.DataFrame(data=None, columns=data.columns) 
          else :
             "USER WARNING : 0 events in ",f," syst ",syst," ,cat = ",cat 
@@ -307,8 +335,14 @@ for num,f in enumerate(input_files):
          
          if syst=='' and not opt.nosysts : systematics_labels = systematics[1] #systemaitcs[1] : this should be done for nominal only, to add weights
          else : systematics_labels =[] #systemaitcs[1] : this should be done for nominal only, to add weights
-         if not opt.add_benchmarks : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm) #systemaitcs[1] : this should be done for nominal only, to add weights
-         else : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm, add_benchmarks=opt.add_benchmarks,benchmark_num=benchmark_num,benchmark_norm = calculate_benchmark_normalization(normalizations,year,benchmark_num))
+         nlo_renormalization = 1.
+         if opt.doNLO and not ('qqHH' in target_names[num]): 
+             sample_name = target_names[num][0:target_names[num].find('kt_1')+len('kt_1')]
+             #nlo_renormalization =  (eval_nnlo_xsec_ggF(LHEweight_rescale_dict[sample_name]['kl'])/LHEweight_rescale_dict[sample_name]['gen_xsec_powheg']*BR_hhbbgg)*LHEweight_rescale_dict[sample_name]['LHE_SF_powheg'][year] #ggHH normalization for NLO samples
+             nlo_renormalization =  (eval_nnlo_xsec_ggF(LHEweight_rescale_dict[sample_name]['kl'])*BR_hhbbgg)*LHEweight_rescale_dict[sample_name]['LHE_SF_powheg'][year] #ggHH normalization for NLO samples
+         print nlo_renormalization 
+         if not opt.add_benchmarks : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm,nlo_renormalization=nlo_renormalization) #systemaitcs[1] : this should be done for nominal only, to add weights
+         else : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm,nlo_renormalization=nlo_renormalization, add_benchmarks=opt.add_benchmarks,benchmark_num=benchmark_num,benchmark_norm = calculate_benchmark_normalization(normalizations,year,benchmark_num))
          #print newname, " ::: Entries =", ws.data(newname).numEntries(), ", SumEntries =", ws.data(newname).sumEntries()
 
          masses_array = masses

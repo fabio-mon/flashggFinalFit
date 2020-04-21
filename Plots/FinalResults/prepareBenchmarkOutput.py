@@ -21,7 +21,8 @@ def convert_reorder(number,limit):
    limit_str=[]
    limit_str.append("%d"%number)
    limit_str.append("%.5f"%limit[2])
-   if not options.isobserved : limit_str.append("%.5f"%limit[2])   #if no observed, then append again expected
+   if not options.unblind : limit_str.append("%.5f"%limit[2])   #if no observed, then append again expected
+   else : limit_str.append("%.5f"%limit[5])   #if no observed, then append again expected
    limit_str.append("%.5f"%limit[4])
    limit_str.append("%.5f"%limit[3])
    limit_str.append("%.5f"%limit[1])
@@ -49,7 +50,7 @@ parser = OptionParser()
 parser.add_option("--indir", help="Input directory ")
 parser.add_option("--outdir", help="Output directory ")
 parser.add_option("--outtag", help="Output tag ")
-parser.add_option("--isobserved", help="Observed is present or not ",default=False)
+parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=False)
 
 (options,args)=parser.parse_args()
 

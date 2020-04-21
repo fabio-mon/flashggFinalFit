@@ -41,7 +41,7 @@ parser = OptionParser()
 parser.add_option("--indir", help="Input directory ")
 parser.add_option("--outdir", help="Output directory ")
 parser.add_option("--outtag", help="Output tag ")
-parser.add_option("--blind", help="Observed is present or not ",default=True)
+parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=False)
 
 (options,args)=parser.parse_args()
 
@@ -171,7 +171,7 @@ hframe.Draw()
 agr2sigma.Draw("E2same")
 agr1sigma.Draw("E2SAME")
 agrExp.Draw("PSAME")
-if not options.blind:
+if options.unblind:
     agrObs.Draw("PESAME")
 
 ######################
@@ -208,7 +208,7 @@ legend.SetY2(0.334737)
 legend.SetNColumns(2)
 #legend.SetHeader('95% CL upper limits', 'c')
 legend.SetHeader('95% CL upper limits')
-if not options.blind : legend.AddEntry(agrObs, "Observed", "p")
+if options.unblind : legend.AddEntry(agrObs, "Observed", "p")
 legend.AddEntry(agr1sigma, "68% expected", "f")
 legend.AddEntry(agrExp, "Median expected", "p")
 legend.AddEntry(agr2sigma, "95% expected", "f")

@@ -69,7 +69,8 @@ string year_;
 string mergeYearsStr_;
 string lumiYearsStr_;
 string templatefile_;
-string signalproc_;
+vector<string> signalproc_;
+string signalprocStr_;
 string outdir_;
 string plotdir_;
 string procStr_;
@@ -100,8 +101,10 @@ void OptionParser(int argc, char *argv[]){
 		("outfiledir,o", po::value<string>(&outdir_)->default_value("test/"), "Output file dir")
 		("plotdir,p", po::value<string>(&plotdir_)->default_value("test/"), "Plot dir")
 		("procs", po::value<string>(&procStr_)->default_value("hh_node_SM,ggh,qqh,vh,tth"), "Processes (comma sep)")
-		("signalproc,s", po::value<string>(&signalproc_)->default_value("hh_node_SM"), "Name of the signal process")
+		//("signalproc,s", po::value<string>(&signalproc_)->default_value("hh_node_SM"), "Name of the signal process")
+		("signalproc,s", po::value<string>(&signalprocStr_)->default_value("hh_node_SM,ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1"), "Name of the signal process")
 		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11"), "Flashgg categories")
+//		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0"), "Flashgg categories")
 		("nCats", po::value<int>(&nCats_)->default_value(12), "Numer of flashgg categories")
 		("nMVA", po::value<int>(&nMVA_)->default_value(3+1), "Numer of MVA categories")
 		("nMX", po::value<int>(&nMX_)->default_value(4), "Numer of MX categories")
@@ -116,6 +119,7 @@ void OptionParser(int argc, char *argv[]){
 
 	split(procs_,procStr_,boost::is_any_of(","));
 	split(infiles_,infilesStr_,boost::is_any_of(","));
+	split(signalproc_,signalprocStr_,boost::is_any_of(","));
 	split(flashggCats_,flashggCatsStr_,boost::is_any_of(","));
 	split(mergeYears_,mergeYearsStr_,boost::is_any_of(","));
 	split(vecLumiYears_,lumiYearsStr_,boost::is_any_of(","));
@@ -170,7 +174,8 @@ void RooDraw(TCanvas *can, TH1F *h, RooPlot* frame,RooDataHist* hist, RooAbsPdf*
 
 	double offset =0.05;
 	TString newtitle = iproc;
-	if (iproc.find("hh") != std::string::npos) newtitle = "HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
+	if (iproc.find("vbfhh") != std::string::npos) newtitle = "VBF HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
+	else if (iproc.find("hh") != std::string::npos) newtitle = "ggF HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
 	TLatex *lat1 = new TLatex(.129+0.03+offset,0.85,newtitle);
 	lat1->SetNDC(1);
 	lat1->SetTextSize(0.047);
@@ -178,7 +183,7 @@ void RooDraw(TCanvas *can, TH1F *h, RooPlot* frame,RooDataHist* hist, RooAbsPdf*
 	TString catLabel_humanReadable  = year_+" "+category;
 	if (!putyear) catLabel_humanReadable  = category;
 	catLabel_humanReadable.ReplaceAll("_"," ");
-	catLabel_humanReadable.ReplaceAll("DoubleHTag","CAT");
+	catLabel_humanReadable.ReplaceAll("DoubleHTag"," CAT");
 	TLatex *lat2 = new TLatex(0.93,0.88,catLabel_humanReadable);
 	lat2->SetTextAlign(33);
 	lat2->SetNDC(1);
@@ -261,7 +266,8 @@ int main(int argc, char *argv[]){
 		string proc_type_upper = proc_type;
 		proc_type_upper[0] = std::toupper(proc_type_upper[0]);
 		string iproc_type = "_"+iproc;
-		if (iproc == signalproc_)  {
+	//	if (iproc == signalproc_)  {
+		if (signalprocStr_.find(iproc) != string::npos )  {
 			proc_type = "sig";
 			proc_type_upper = proc_type;
 			proc_type_upper[0] = std::toupper(proc_type_upper[0]);
@@ -354,6 +360,7 @@ int main(int argc, char *argv[]){
 			}
 
 			int c = stoi(icat.substr(icat.find_last_of("_")+1)); //find category number used
+			if (icat.find("VBFDoubleHTag") != string::npos ) c = 12; //category number is 12 if it is VBFDoubleHTAg
 			
 			if(iproc.find("ggh") != string::npos || iproc.find("qqh") != string::npos) {
 					MjjSig[ic] = new RooBernstein(("MjjHig_"+iproc+"_cat"+std::to_string(c)).c_str(),"",*Mjj,
@@ -383,9 +390,9 @@ int main(int argc, char *argv[]){
 			//normalization_cat = sigToFit[ic]->sumEntries()/1000.;
 
 			if (normalization_cat < 0) normalization_cat = 0.;
-			RooRealVar *MjjSig_normalization = new RooRealVar(("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c)+"_normalization").c_str(),("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c)+"_normalization").c_str(),normalization_cat,"");
+			RooRealVar *MjjSig_normalization = new RooRealVar(("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_"+icat+"_normalization").c_str(),("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_"+icat+"_normalization").c_str(),normalization_cat,"");
 			MjjSig_normalization->setConstant(true);
-			RooFormulaVar *finalNorm = new RooFormulaVar(("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c)+"_norm").c_str(),("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c)+"_norm").c_str(),"@0",RooArgList(*MjjSig_normalization));
+			RooFormulaVar *finalNorm = new RooFormulaVar(("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_"+icat+"_norm").c_str(),("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_"+icat+"_norm").c_str(),"@0",RooArgList(*MjjSig_normalization));
 			w->import( *finalNorm);
 
 
@@ -413,7 +420,7 @@ int main(int argc, char *argv[]){
 				if (rrv) rrv->setConstant(true);
 				string thisVarName(a->GetName());
 				string newVarName = string(thisVarName);
-				boost::replace_all(newVarName,"_cat", "_"+year_+"_DoubleHTag_");
+				boost::replace_all(newVarName,"_cat", "_"+year_+"_"+icat.substr(0,icat.find_last_of("_")+1) );
 				boost::replace_all(newVarName,proc_type+"_", "");
 				boost::replace_all(newVarName,year_, (iproc+"_"+year_));
 				//boost::replace_all(newVarName,"Mjj", "CMS_hbb_mass"); //will do this later
@@ -426,7 +433,7 @@ int main(int argc, char *argv[]){
 			      
 			sigParams->Print("v");
 
-			string EditPDF = ("EDIT::hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c)+"(Mjj"+proc_type_upper+iproc_type+"_cat"+to_string(c));
+			string EditPDF = ("EDIT::hbbpdfsm_13TeV_"+iproc+"_"+year_+"_"+icat+"(Mjj"+proc_type_upper+iproc_type+"_cat"+to_string(c));
 			for (unsigned int iv = 0; iv < varsToChange.size(); iv++)
 			{
 				EditPDF += (","+varsToChange[iv].first +"="+varsToChange[iv].second).c_str();		
@@ -436,18 +443,18 @@ int main(int argc, char *argv[]){
 
 			///Plot everything 
 			double putyear = 1;
-			TH1F *h = new TH1F(("h_"+iproc+"_"+year_+"_"+to_string(c)).c_str(),("h_"+iproc+"_"+year_+"_"+to_string(c)).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
+			TH1F *h = new TH1F(("h_"+iproc+"_"+year_+"_"+icat).c_str(),("h_"+iproc+"_"+year_+"_"+icat).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
 			MjjSig[ic]->fillHistogram(h,RooArgList(*Mjj),sigToFit[ic]->sumEntries());
 			TCanvas* can = new TCanvas("can","can",650,650);
-			RooDraw(can,h,Mjj->frame(),((RooDataHist*)sigToFit[ic]),MjjSig[ic],iproc,("CAT "+to_string(c)),putyear);
-			string canname = plotdir_+"fit_"+iproc+"_"+year_+"_cat"+to_string(c);
+			RooDraw(can,h,Mjj->frame(),((RooDataHist*)sigToFit[ic]),MjjSig[ic],iproc,(icat),putyear);
+			string canname = plotdir_+"fit_"+iproc+"_"+year_+"_"+icat;
 			can->Print((canname+".pdf").c_str());
 			can->Print((canname+".jpg").c_str());
   			delete can;
 
 			if (!mergeYearsStr_.empty()) putyear=0;
 			if ((mergeFitMVAcats_) && (NCAT==nCats_)){  //only works in case the set of categories is complete
-				TH1F *hMVA = new TH1F(("hMVA_"+iproc+"_"+year_+"_"+to_string(c)).c_str(),("hMVA_"+iproc+"_"+year_+"_"+to_string(c)).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
+				TH1F *hMVA = new TH1F(("hMVA_"+iproc+"_"+year_+"_"+icat).c_str(),("hMVA_"+iproc+"_"+year_+"_"+icat).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
 				MjjSig[ic]->fillHistogram(hMVA,RooArgList(*Mjj),sigToFitMVA[categories_scheme[ic]]->sumEntries());
 
 				TCanvas* canMVA = new TCanvas("canMVA","canMVA",650,650);
@@ -458,19 +465,19 @@ int main(int argc, char *argv[]){
   				delete canMVA;
 			}
 			if (!mergeYearsStr_.empty()){  
-				TH1F *hAllYears = new TH1F(("hAllYears_"+iproc+"_"+year_+"_"+to_string(c)).c_str(),("hAllYears_"+iproc+"_"+year_+"_"+to_string(c)).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
+				TH1F *hAllYears = new TH1F(("hAllYears_"+iproc+"_"+year_+"_"+icat).c_str(),("hAllYears_"+iproc+"_"+year_+"_"+icat).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
 				MjjSig[ic]->fillHistogram(hAllYears,RooArgList(*Mjj),sigToFitAllYears[ic]->sumEntries());
 
 				TCanvas* canAllYears = new TCanvas("canAllYears","canAllYears",650,650);
-				RooDraw(canAllYears,hAllYears,Mjj->frame(),((RooDataHist*)sigToFitAllYears[ic]),MjjSig[ic],iproc,("CAT "+to_string(c)),putyear);
-				string cannameAllYears = plotdir_+"fit_"+iproc+"_"+year_+"_AllYears_cat"+to_string(c);
+				RooDraw(canAllYears,hAllYears,Mjj->frame(),((RooDataHist*)sigToFitAllYears[ic]),MjjSig[ic],iproc,(icat),putyear);
+				string cannameAllYears = plotdir_+"fit_"+iproc+"_"+year_+"_AllYears_"+icat;
 				canAllYears->Print((cannameAllYears+".pdf").c_str());
 				canAllYears->Print((cannameAllYears+".jpg").c_str());
   				delete canAllYears;
 			}
 
 
-			string finalpdfname = "hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c);
+			string finalpdfname = "hbbpdfsm_13TeV_"+iproc+"_"+year_+"_"+icat;
 			wAll->import(*w->pdf(finalpdfname.c_str()));
 			wAll->import( *w->function((finalpdfname+"_norm").c_str()));
 

@@ -11,7 +11,9 @@ source run2D.sh
 ```
 Combine version : v8.1.0. , CMSSW_10_2_13
 
-To run Asymptotic for BSM benchmarks using job submission (I am using sbatch system, there are several options like condor, etc available as well, you can try using them, however for now this tool is only for 1D, it is trivial to update it for 2D). 
+To run Asymptotic for BSM benchmarks using job submission (I am using sbatch system, there are several options like condor, etc available as well, you can try using them). 
+
+To run 2D, add option --do2D
 
 ```
 python submit_limits.py --method Asymptotic --do_benchmarks_scan --datacard Datacards/cms_HHbbgg_datacard_nodeSM_24_01_2020.txt --queue  short.q --outDir output/Limits_24_01_2020_benchmarks --outtag 24_01_2020_benchmarks 

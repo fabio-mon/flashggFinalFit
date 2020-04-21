@@ -3,6 +3,8 @@ import re, optparse
 from optparse import OptionParser
 ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptStat(0)
+from scipy.interpolate import interp1d
+import numpy as np
 
 def extra_texts():
     # print "... drawing extra texts"
@@ -45,7 +47,6 @@ def extra_texts():
     simBox.SetTextColor(ROOT.kBlack)
     simBox.SetTextAlign(13)
 
-
     channelLabel = ROOT.TLatex  (0.6-0.05, 0.8, "HH #rightarrow #gamma#gammab#bar{b}")
     channelLabel.SetNDC()
     # channelLabel.SetTextAlign(31)
@@ -53,8 +54,15 @@ def extra_texts():
     channelLabel.SetTextFont(lumitextfont)
     channelLabel.SetTextColor(ROOT.kBlack)
 
+    channelLabel0 = ROOT.TLatex  (0.6-0.05, 0.7, "Expected (#kappa_{#lambda} = 1)")
+    #channelLabel0 = ROOT.TLatex  (0.6-0.05, 0.7, "Expected (#kappa_{#lambda} = -1.1)")
+    channelLabel0.SetNDC()
+    channelLabel0.SetTextSize(1.15*extratextsize)
+    channelLabel0.SetTextFont(lumitextfont)
+    channelLabel0.SetTextColor(ROOT.kBlack)
 
-    return [lumibox, CMSbox, simBox, channelLabel]
+
+    return [lumibox, CMSbox, simBox, channelLabel, channelLabel0]
     # lumibox.Draw()
     # CMSbox.Draw()
     # simBox.Draw()
@@ -88,10 +96,11 @@ parser.add_option("--indir", help="Input directory ")
 parser.add_option("--infile", help="Input file ")
 parser.add_option("--outdir",default='plots/', help="Output directory ")
 parser.add_option("--outtag", help="Output tag")
+parser.add_option("--outcomb", help="Output tag for the combination",default="")
 parser.add_option("--zoom", action="store_true" , help="Zoom the plot ")
-parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=True)
-parser.add_option("--channels_to_run",default="all,DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11", help = "which channels to run on")
-#parser.add_option("--channels_to_run",default="all", help = "which channels to run on")
+parser.add_option("--unblind", action="store_true",help="Observed is present or not ",default=False)
+#parser.add_option("--channels_to_run",default="all,DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11", help = "which channels to run on")
+parser.add_option("--channels_to_run",default="all", help = "which channels to run on")
 (options,args)=parser.parse_args()
 ###########
 
@@ -111,6 +120,8 @@ if options.zoom:
   xmin = -3
   xmax = 7
   ymax = 2
+exp_list = []
+xval_list = []
 for ich,ch in enumerate(options.channels_to_run.split(",")):
    if ch!="all" :
       fname =  fInName.replace("all",ch) 
@@ -121,6 +132,14 @@ for ich,ch in enumerate(options.channels_to_run.split(",")):
    fIn = ROOT.TFile.Open(fname)
    tree = fIn.Get('limit')
    graphs.append(create_gr(tree,colors[ich]))
+   if ch=="all" :
+      for ipt in range(0,graphs[ich].GetN()):
+         x = ROOT.Double(0)
+         y = ROOT.Double(0)
+         graphs[ich].GetPoint(ipt, x, y)
+         exp_list.append(y)
+         xval_list.append(x)
+if len(exp_list)>0 : exp_inter = interp1d(xval_list, exp_list, kind='cubic')
 
 c1 = ROOT.TCanvas('c1', 'c1', 600, 600)
 c1.SetFrameLineWidth(3)
@@ -145,6 +164,16 @@ for gr in graphs :
 ### lines
 sigmas = [1,1.96]
 CL = [68,95]
+sigma1_line = np.array([sigmas[0]*sigmas[0]]*5000)
+sigma2_line = np.array([sigmas[1]*sigmas[1]]*5000)
+xval_line = np.linspace(-5,11,5000) 
+if len(exp_list)>0 : 
+  exp_line = exp_inter(xval_line)
+  idx_sigma1 = np.argwhere(np.diff(np.sign(exp_line-sigma1_line ))).flatten()
+  idx_sigma2 = np.argwhere(np.diff(np.sign(exp_line-sigma2_line ))).flatten()
+  print '68% : ', np.array(xval_line)[idx_sigma1], np.array(sigma1_line)[idx_sigma1],np.array(exp_line)[idx_sigma1]
+  print '95% : ', np.array(xval_line)[idx_sigma2], np.array(sigma2_line)[idx_sigma2],np.array(exp_line)[idx_sigma2]
+
 lines = []
 for s in sigmas:
     l = ROOT.TLine(xmin, s*s, xmax, s*s)
@@ -165,7 +194,11 @@ for isigma,s in enumerate(sigmas):
 for l in labels: l.Draw()
 
 et = extra_texts()
-for t in et: t.Draw()
+for t in et[0:len(et)-1]: t.Draw()
+if not options.unblind :
+  print 'Expected' 
+  et[-1].Draw()
+
 
 legend = ROOT.TLegend(0.2,0.43,0.36,0.9)
 legend.SetBorderSize(0)
@@ -179,8 +212,9 @@ for ich,ch in enumerate(options.channels_to_run.split(",")):
    else : legend.AddEntry(graphs[ich],"CAT %s"%(ch.replace("DoubleHTag_","")),"L")
 if dolegend : legend.Draw("same")
 
-outname = '%s/klambda_likelihood_%s'%(options.outdir,options.outtag)
+outname = '%s/klambda_likelihood_%s%s'%(options.outdir,options.outtag,options.outcomb)
 if options.zoom : outname+="_zoom"
+if options.unblind : outname+="_obs"
 c1.Print('%s.pdf'%outname, 'pdf')
 
 ### also dump to a ROOT file
