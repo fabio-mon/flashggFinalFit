@@ -53,7 +53,7 @@ using namespace boost;
 
 namespace po = program_options;
 
-bool BLIND = true;
+bool BLIND = false;
 bool runFtestCheckWithToys=false;
 int mgg_low =100;
 int mgg_high =180;

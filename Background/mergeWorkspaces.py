@@ -18,8 +18,8 @@ import ROOT as RT
 
 RT.RooMsgService.instance().setGlobalKillBelow(RT.RooFit.WARNING)
 
-#def getWs(fname,wsname="multipdf"):
-def getWs(fname,wsname="wsig_13TeV"):
+def getWs(fname,wsname="multipdf"):
+#def getWs(fname,wsname="wsig_13TeV"):
     fin = RT.TFile.Open(fname)
     return fin.Get(wsname)
     
@@ -48,4 +48,13 @@ for (iws,ws) in enumerate(workspaces[1:]):
             getattr(ws0,"import")(func,RT.RooFit.RecycleConflictNodes())
         func = funitr.Next()
 
+    datas = ws.allData()
+    print type(datas)
+    for data in datas:
+        if not "allProcs" in data.GetName():
+            print type(data)
+            print(data.GetName())
+            getattr(ws0, 'import')(data,RT.RooFit.Rename(data.GetName()))
+
 ws0.writeToFile(output)
+ 

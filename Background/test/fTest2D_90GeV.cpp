@@ -59,7 +59,7 @@ bool runFtestCheckWithToys=false;
 int mgg_low =100;
 int mgg_high =180;
 //int mjj_low =70;
-int mjj_low =70;
+int mjj_low =90;
 int mjj_high =190;
 //int nBinsForMass = 4*(mgg_high-mgg_low);
 int nBinsForMass = mgg_high-mgg_low;
@@ -592,7 +592,7 @@ void plot(RooRealVar *mass, map<string,RooAbsPdf*> pdfs, RooDataSet *data, strin
     // *prob = getGoodnessOfFit(mass,(it->second),data,name);
     // cout<< Form("reduced #chi^{2} = %.3f, #chi^{2} = %.3f, Prob = %.2f",chi2,chi2*(nBinsForMass-np),*prob)<<endl;
     // cout<< Form(" INFO projection = %d  %s %s #chi^{2} = %.3f, reduced #chi^{2} = %.3f, prob = %.7f",proj,it->first.c_str(),ext.c_str(),chi2*(numBins-np),chi2,prob)<<endl;
-    string proj_str = "Mjj";
+    string proj_str = "Mjj_90GeV";
     if (proj==1)  proj_str= "Mgg";
     cout<< Form(" INFO : Projection = %s, %s %s, #chi^{2} = %.3f",proj_str.c_str(),it->first.c_str(),ext.c_str(),chi2)<<endl;
 
@@ -714,7 +714,7 @@ void BkgMultiModelFitAllOrders(TString OutputFileName, std::string jsonForEnvelo
     mgg = _w->var("CMS_hgg_mass");
     // if(_fitStrategy==2) mjj = _w->var("CMS_hjj_mass");
     //  else mjj = new RooRealVar("CMS_hjj_mass","CMS_hjj_mass",mjj_low,mjj_high);
-    if(_fitStrategy==2) mjj = _w->var("Mjj");
+    if(_fitStrategy==2) mjj = _w->var("Mjj_90GeV");
     else mjj = new RooRealVar("CMS_hjj_mass","CMS_hjj_mass",mjj_low,mjj_high);
   }
   else if(isbbggLimits_){
@@ -1132,7 +1132,7 @@ int main(int argc, char* argv[]){
   else{
     mass = (RooRealVar*)inWS->var("CMS_hgg_mass"); //FIXME
     //if(FitStrategy_==2) mass2 = (RooRealVar*)inWS->var("CMS_hjj_mass"); //FIXME
-    if(FitStrategy_==2) mass2 = (RooRealVar*)inWS->var("Mjj"); //FIXME
+    if(FitStrategy_==2) mass2 = (RooRealVar*)inWS->var("Mjj_90GeV"); //FIXME
   }
   if(FitStrategy_!=2) mass2 = mass;
   std:: cout << "[INFO] Got masses from ws " << mass;

@@ -103,7 +103,7 @@ void OptionParser(int argc, char *argv[]){
 		("signalproc,s", po::value<string>(&signalproc_)->default_value("hh_node_SM"), "Name of the signal process")
 		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11"), "Flashgg categories")
 		("nCats", po::value<int>(&nCats_)->default_value(12), "Numer of flashgg categories")
-		("nMVA", po::value<int>(&nMVA_)->default_value(3), "Numer of MVA categories")
+		("nMVA", po::value<int>(&nMVA_)->default_value(3+1), "Numer of MVA categories")
 		("nMX", po::value<int>(&nMX_)->default_value(4), "Numer of MX categories")
 		("mergeFitMVAcats,m", po::value<bool>(&mergeFitMVAcats_)->default_value(false), "Merge categories into 3 MVA for single Higgs fits ")
 		;                                                                                             		
@@ -254,7 +254,8 @@ int main(int argc, char *argv[]){
 
 		TFile *sigFile = TFile::Open(signalfile.c_str());
 		RooWorkspace *w_original = (RooWorkspace*)sigFile->Get("tagsDumper/cms_hgg_13TeV");
-		RooRealVar* Mjj  = (RooRealVar*)w_original->var("Mjj");
+		RooRealVar* Mjj_original  = (RooRealVar*)w_original->var("Mjj");
+		RooRealVar* Mjj_90GeV  = (RooRealVar*)w_original->var("Mjj_90GeV");
 	
 		string proc_type = "hig";	
 		string proc_type_upper = proc_type;
@@ -267,18 +268,45 @@ int main(int argc, char *argv[]){
 			iproc_type = "";
 		}
 
-		Mjj->setRange((iproc+"FitRange").c_str(),minSigFitMjj,maxSigFitMjj);
 		int nbins = 24;
-		Mjj->setBins(nbins); //70 - 190, reasonbale bins 5 GeV
+		Mjj_original->setRange((iproc+"FitRange").c_str(),minSigFitMjj,maxSigFitMjj);
+		Mjj_original->setBins(nbins); //70 - 190, reasonbale bins 5 GeV
+		Mjj_90GeV->setRange((iproc+"FitRange").c_str(),90.,maxSigFitMjj);
+		Mjj_90GeV->setBins(nbins); //70 - 190, reasonbale bins 5 GeV
+
 		RooRealVar *weight = (RooRealVar*)w_original->var("weight");
 
 		RooDataSet* sigToFit[NCAT];
 		RooDataSet* sigToFitMVA[nMVA_];
 		RooDataSet* sigToFitAllYears[NCAT];
-		std::map<int,int> categories_scheme = {{0,0},{1,0},{2,0},{3,0},{4,1},{5,1},{6,1},{7,1},{8,2},{9,2},{10,2},{11,2}};
+		for(int ic = 0; ic < NCAT; ++ic){
+		  sigToFit[ic]=0;
+		  sigToFitAllYears[ic]=0;
+		}
+		for(int iMVA=0; iMVA<nMVA_; ++iMVA)
+		  sigToFitMVA[iMVA]=0;
+	  
+		std::map<int,int> categories_scheme = {{0,0},{1,0},{2,0},{3,0},{4,1},{5,1},{6,1},{7,1},{8,2},{9,2},{10,3},{11,3}};
 		for (int ic = 0; ic < NCAT; ++ic)
 		{
 			auto icat = flashggCats_[ic];
+			RooRealVar* Mjj=0;			
+			if(icat=="DoubleHTag_10" || icat=="DoubleHTag_11"){
+			  cout<<icat<<" contains DoubleHTag_10 or DoubleHTag_11 --> variable is Mjj_90GeV"<<endl;
+			  Mjj=Mjj_90GeV;
+			  Mjj->Print();
+			  minSigFitMjj = 90;
+			  maxSigFitMjj = 190;
+			}
+			else{
+			  cout<<icat<<" does NOT contain DoubleHTag_10 or DoubleHTag_11 --> variable is Mjj"<<endl;
+			  Mjj=Mjj_original;
+			  Mjj->Print();
+			  minSigFitMjj = 70;
+			  maxSigFitMjj = 190;
+			}
+
+
 			sigToFit[ic] = (RooDataSet*) w_original->data((iproc+"_"+year_+"_13TeV_125_"+icat).c_str());
 			if (!(mergeYearsStr_.empty())) {
 				for (unsigned int iyear=0; iyear< mergeYears_.size();++iyear){
@@ -287,16 +315,16 @@ int main(int argc, char *argv[]){
 					else sigToFitAllYears[ic]->append(*(scaleWeight(tmp,Mjj,weight,(iproc+"_YearsMerged_13TeV_125_"+icat).c_str(),lumiYears_[iyear])));
 				}
 			}
-			if ((mergeFitMVAcats_) && (NCAT==nCats_)) { //only works in case the set of categories is complete
+			if (mergeFitMVAcats_){
 				int mva_cat = categories_scheme[ic];
 				if (mergeYearsStr_.empty()) {
-					if ( (ic+1)%nMX_ == 1 )
+					if ( !sigToFitMVA[mva_cat] )
 						sigToFitMVA[mva_cat] = ((RooDataSet*)sigToFit[ic]->Clone((iproc+"_"+year_+"_13TeV_125_MVA"+to_string(mva_cat)).c_str()));
 					else 
 						sigToFitMVA[mva_cat]->append(*((RooDataSet*)sigToFit[ic]));
 				}
 				else {
-					if ( (ic+1)%nMX_ == 1 )
+					if ( !sigToFitMVA[mva_cat] )
 						sigToFitMVA[mva_cat] = ((RooDataSet*)sigToFitAllYears[ic]->Clone((iproc+"_"+year_+"_13TeV_125_MVA"+to_string(mva_cat)).c_str()));
 					else 
 						sigToFitMVA[mva_cat]->append(*((RooDataSet*)sigToFitAllYears[ic]));
@@ -309,6 +337,22 @@ int main(int argc, char *argv[]){
 		for (int ic = 0; ic < NCAT; ++ic)
 		{
 			auto icat = flashggCats_[ic];
+			RooRealVar* Mjj=0;			
+			if(icat=="DoubleHTag_10" || icat=="DoubleHTag_11"){
+			  cout<<icat<<" contains DoubleHTag_10 or DoubleHTag_11 --> variable is Mjj_90GeV"<<endl;
+			  Mjj=Mjj_90GeV;
+			  Mjj->Print();
+			  minSigFitMjj = 90;
+			  maxSigFitMjj = 190;
+			}
+			else{
+			  cout<<icat<<" does NOT contain DoubleHTag_10 or DoubleHTag_11 --> variable is Mjj"<<endl;
+			  Mjj=Mjj_original;
+			  Mjj->Print();
+			  minSigFitMjj = 70;
+			  maxSigFitMjj = 190;
+			}
+
 			int c = stoi(icat.substr(icat.find_last_of("_")+1)); //find category number used
 			
 			if(iproc.find("ggh") != string::npos || iproc.find("qqh") != string::npos) {
@@ -324,6 +368,8 @@ int main(int argc, char *argv[]){
 
 			//Normalization per category
 			double normalization_cat = 0.;	
+			//I should not need the lines below anymore
+			
 			if ((c==10) || (c==11)) {
 				Mjj->setRange((iproc+"CutRange").c_str(),90.,maxSigFitMjj);
 				normalization_cat = (sigToFit[ic]->sumEntries("1",(iproc+"CutRange").c_str()))/1000.; //as for Hgg use fb
@@ -332,7 +378,10 @@ int main(int argc, char *argv[]){
 			} else {
 				normalization_cat = sigToFit[ic]->sumEntries()/1000.; //as for Hgg use fb
 			}
-			Mjj->setRange((iproc+"FitRange").c_str(),minSigFitMjj,maxSigFitMjj);
+			//Mjj->setRange((iproc+"FitRange").c_str(),minSigFitMjj,maxSigFitMjj);
+			
+			//normalization_cat = sigToFit[ic]->sumEntries()/1000.;
+
 			if (normalization_cat < 0) normalization_cat = 0.;
 			RooRealVar *MjjSig_normalization = new RooRealVar(("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c)+"_normalization").c_str(),("hbbpdfsm_13TeV_"+iproc+"_"+year_+"_DoubleHTag_"+to_string(c)+"_normalization").c_str(),normalization_cat,"");
 			MjjSig_normalization->setConstant(true);

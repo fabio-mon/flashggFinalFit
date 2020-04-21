@@ -36,3 +36,6 @@ outputdir=plots/fTest2D/${name2D}_${DATE}_${outtag}
 
 #2D Data
 #./bin/fTest2D -i /work/nchernya/DiHiggs/inputs/${DATE}/output_DoubleEG_${YEAR}_${DATE}.root --saveMultiPdf CMS-HGG_multipdf2D_100x100bins_HHbbgg_${YEAR}_${DATE}_ivanhighjson.root --isData 1 -f DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11 --isFlashgg 1  -c 12 -D plots/fTest2D_data/ -d plots/fTest2D_data//res.dat --jsonForEnvelope Env_json_ivan_high.dat  # _high.dat
+
+
+./bin/fTest2D -i /eos/user/f/fmonti/HHbbgg_run2/workspaces/FEB2020/DoubleEG/ws//output_DoubleEG_all3years.root --saveMultiPdf CMS-HGG_multipdf2D_DoubleEG_ivanjson_HHbbgg_all3years_FEB2020.root --isData 1 -f DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11 --isFlashgg 1  -c 12 -D /eos/user/f/fmonti/HHbbgg_run2/workspaces/FEB2020/plots/ -d /eos/user/f/fmonti/HHbbgg_run2/workspaces/FEB2020/res.dat --jsonForEnvelope /afs/cern.ch/user/f/fmonti/work/flashggFinalFit2/CMSSW_7_4_7/src/flashggFinalFit/MetaData_HHbbgg/Env_json_ivan.dat

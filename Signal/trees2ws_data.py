@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import ROOT
@@ -46,7 +47,7 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],a
 
   #define argument set  
   arg_set = ROOT.RooArgSet(ws.var("weight"))
-  variables = ["CMS_hgg_mass","dZ" ]#, "ttHScore"] #ttHScore
+  variables = ["CMS_hgg_mass","dZ"]#, "ttHScore"] #ttHScore
   for var in variables :
       arg_set.add(ws.var(var))
 
@@ -75,11 +76,9 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],a
 def get_options():
 
     parser = OptionParser()
-    #parser.add_option("--inp-files",type='string',dest='inp_files',default='DoubleEG_2016_2017_2018_20_12_2019')  
-    parser.add_option("--inp-files",type='string',dest='inp_files',default='DoubleEG_2018_20_12_2019')  #2016
-    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/20_12_2019/trees/')
-    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/20_12_2019/workspaces/')
-    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
+    parser.add_option("--inp-files",type='string',dest='inp_files',default='/eos/user/f/fmonti/HHbbgg_run2/workspaces/FEB2020/DoubleEG/output_DoubleEG_all3years.root')  #2016
+    parser.add_option("--out-dir",type='string',dest="out_dir",default='/eos/user/f/fmonti/HHbbgg_run2/workspaces/FEB2020/DoubleEG/ws/')
+    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3')
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 

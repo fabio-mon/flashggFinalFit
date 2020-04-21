@@ -1,7 +1,7 @@
 doFTEST=0
 doFIT=0
-doPACKAGER=1
-doCALCPHOSYST=0
+doPACKAGER=0
+doCALCPHOSYST=1
 MASS=''
 
 YEAR="2016"
@@ -10,13 +10,13 @@ YEAR="2016"
 
 #DATE="24_01_2020"
 #DATE="04_02_2020"
-DATE="18_02_2020"
+DATE="2020"
 EXT="singleHiggs"$YEAR
 #EXT="nodes"$YEAR
 PHOTONSYSTFILE=dat/photonCatSyst.dat # without systematics
 #PHOTONSYSTFILE=dat/photonCatSyst_${EXT}.dat
 
-INDIR="/work/nchernya/DiHiggs/inputs/${DATE}/"
+INDIR="/eos/user/f/fmonti/HHbbgg_run2/workspaces/FEB2020/ws${YEAR}/"
 OUTDIR="output/out_fit_${DATE}_${EXT}"
 if [ $doFTEST -gt 0 ]; then
    OUTDIR="output/out_${DATE}_${EXT}"
@@ -29,7 +29,7 @@ runLocal=''
 
 BATCH=T3CH
 DEFAULTQUEUE="short.q " #for slurm not used  #-l h_vmem=6g"  #increase memory for systematics -l h_vmem=6g
-CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11"
+CATS="DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,TTHHadronicTag_0,TTHHadronicTag_1,TTHHadronicTag_2,TTHHadronicTag_3,TTHLeptonicTag_0,TTHLeptonicTag_1,TTHLeptonicTag_2,TTHLeptonicTag_3"
 REFTAG="DoubleHTag_0"
 INTLUMI=136.8
 
@@ -42,9 +42,9 @@ SCALESGLOBAL="NonLinearity,Geant4,LightYield,Absolute"
 #INFILES="output_hh_SM_generated_${YEAR},output_ggh_${YEAR},output_tth_${YEAR},output_qqh_${YEAR},output_vh_${YEAR}"
 
 #############SINGLE HIGGS ############
-PROCS="ggh_${YEAR},tth_${YEAR},qqh_${YEAR},vh_${YEAR}"
+PROCS="ggh_${YEAR},tth_${YEAR},qqh_${YEAR},vh_${YEAR},thq_${YEAR}"
 REFPROC="tth_${YEAR}"
-INFILES="output_ggh_${YEAR},output_tth_${YEAR},output_qqh_${YEAR},output_vh_${YEAR}"
+INFILES="output_ggh_${YEAR},output_tth_${YEAR},output_qqh_${YEAR},output_vh_${YEAR},output_thq_${YEAR}"
 REFTAG="DoubleHTag_9"
 ###tests##
 #PROCS="tth_${YEAR}"
