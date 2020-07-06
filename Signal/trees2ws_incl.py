@@ -14,6 +14,20 @@ whichNodes = ['SM']
 #whichNodes.append('SM')
 #whichNodes.append('box')
 
+
+
+def reweight_rho(what,df0,df1,df_to_be_reweighted):
+    m0, bins = np.histogram(df0[what],bins=np.linspace(0,70,35),weights=df0["weight"],normed=True)
+    m1, _ = np.histogram(df1[what],bins=bins,weights=df1["weight"],normed=True)
+    #weights = m0.astype(np.float32) / m1.astype(np.float32)
+    weights = np.divide(m0.astype(np.float32), m1.astype(np.float32), out=np.ones_like(m0.astype(np.float32)), where=(m1.astype(np.float32)!=0))
+    weights[np.isnan(weights)] = 1.
+    weights[np.where(bins[:-1]>50)] = 1.
+    df_to_be_reweighted["%s_bin"%what] = pd.cut(df_to_be_reweighted[what],bins,labels=range(0,bins.shape[-1]-1))
+    rewei = df_to_be_reweighted[["%s_bin"%what,"weight"]].apply(lambda x: weights[x[0]]*x[1], axis=1, raw=True)
+    df_to_be_reweighted["weight"] = rewei * df_to_be_reweighted["weight"].sum() / rewei.sum()
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 def getSystLabelsWeights(isMET = False):
     phosystlabels=[]
@@ -21,7 +35,7 @@ def getSystLabelsWeights(isMET = False):
     metsystlabels=[]
     systlabels=['']
     for direction in ["Up","Down"]:
-     #   phosystlabels.append("MvaShift%s01sigma" % direction)
+        phosystlabels.append("MvaShift%s01sigma" % direction)
         phosystlabels.append("SigmaEOverEShift%s01sigma" % direction)
      #   phosystlabels.append("MaterialCentralBarrel%s01sigma" % direction)
      #   phosystlabels.append("MaterialOuterBarrel%s01sigma" % direction)
@@ -32,7 +46,7 @@ def getSystLabelsWeights(isMET = False):
      #   phosystlabels.append("MCScaleGain1EB%s01sigma" % direction)
         jetsystlabels.append("JEC%s01sigma" % direction)
         jetsystlabels.append("JER%s01sigma" % direction)
-     #   jetsystlabels.append("PUJIDShift%s01sigma" % direction)
+        jetsystlabels.append("PUJIDShift%s01sigma" % direction)
      #   metsystlabels.append("metJecUncertainty%s01sigma" % direction)
      #   metsystlabels.append("metJerUncertainty%s01sigma" % direction)
      #   metsystlabels.append("metPhoUncertainty%s01sigma" % direction)
@@ -48,8 +62,8 @@ def getSystLabelsWeights(isMET = False):
     if isMET:
         systlabels += metsystlabels
 
-    #systweights = ["UnmatchedPUWeight", "MvaLinearSyst", "LooseMvaSF", "PreselSF", "electronVetoSF", "TriggerWeight", "FracRVWeight", "FracRVNvtxWeight", "ElectronWeight", "MuonIDWeight", "MuonIsoWeight", "JetBTagCutWeight"] #, "JetBTagReshapeWeight"]
-    systweights = ["JetBTagReshapeWeight","PreselSF", "electronVetoSF", "TriggerWeight","LooseMvaSF"] 
+    systweights = [ "PreselSF", "electronVetoSF", "TriggerWeight", "FracRVWeight",  "MuonIDWeight", "MuonIsoWeight", "ElectronIDWeight", "ElectronRecoWeight", "JetBTagReshapeWeight"] #, "JetBTagReshapeWeight"]
+    #systweights = ["JetBTagReshapeWeight","PreselSF", "electronVetoSF", "TriggerWeight","LooseMvaSF"] 
     return systlabels,systweights
 
 
@@ -125,7 +139,7 @@ def apply_selection(data=None,reco_name=None):
   #recobin_data = recobin_data[((recobin_data['mgg']>=100.)&(recobin_data['mgg']<=180.))]
   return recobin_data
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],btag_norm = 1.,nlo_renormalization = 1.,add_benchmarks = False, benchmark_num = -1, benchmark_norm = 1.):
+def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],btag_norm = 1.,nlo_renormalization = 1.,save_every_nth_event = 1,add_benchmarks = False, benchmark_num = -1, benchmark_norm = 1.):
 
   #apply selection to extract correct recobin
   #recobin_data = apply_selecetion(data,selection_name)
@@ -157,6 +171,10 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],b
 #######################################################
 #Apply proper NNLO x BR for NLO samples, otherwise x 1. is applied
   data['weight'] *= nlo_renormalization 
+  
+  data.event = data.event.astype('int64')
+  total_sum_events = sum(data['weight'])
+  used_sum_events = sum(data.query('event %% %d!=0'%save_every_nth_event)['weight']) #using only events not used in the training
 
   #Fill the dataset with values
   for index,row in data.iterrows():
@@ -169,10 +187,10 @@ def add_dataset_to_workspace(data=None,ws=None,name=None,systematics_labels=[],b
 
     w_val = row['weight']
 
-    if add_benchmarks :
-      if row["event"]%2!=0 : 
+    if save_every_nth_event!=1 : #if it is 1 then we do not need to discard any events
+      if row["event"]%save_every_nth_event==0 : 
           w_val = 0.
-      else : w_val = w_val*2. ## because discaring exactly half of events 
+      else : w_val = w_val*total_sum_events/used_sum_events ## because discaring exactly half of events 
 
 
     roodataset.add( arg_set, w_val )
@@ -193,24 +211,29 @@ def eval_nnlo_xsec_ggF(kl):
    eC = 0.5185
    
    return SF*(A+B*kl+C*kl*kl)   
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 def get_options():
 
     parser = OptionParser()
     ###########################For final result before unblinding with VBF add lepton Veto #####################
-    #parser.add_option("--inp-files",type='string',dest='inp_files',default='qqh,tth,vh,ggh')  
-    #parser.add_option("--inp-files",type='string',dest='inp_files',default='qqh,tth,vh,ggh,vbfhh')  
+    parser.add_option("--inp-files",type='string',dest='inp_files',default='qqh,tth,vh,ggh')  
     #parser.add_option("--inp-files",type='string',dest='inp_files',default='hh')  
-    parser.add_option("--inp-files",type='string',dest='inp_files',default='hh_nlo_cHHH0,hh_nlo_cHHH1,hh_nlo_cHHH2p45,hh_nlo_cHHH5')  
+    #parser.add_option("--inp-files",type='string',dest='inp_files',default='qqHH_CV_1_C2V_1_kl_1,qqHH_CV_1_C2V_2_kl_1,qqHH_CV_1_C2V_1_kl_2,qqHH_CV_1_C2V_1_kl_0,qqHH_CV_0p5_C2V_1_kl_1,qqHH_CV_1p5_C2V_1_kl_1')  
+    #parser.add_option("--inp-files",type='string',dest='inp_files',default='hh_nlo_cHHH0,hh_nlo_cHHH1,hh_nlo_cHHH2p45,hh_nlo_cHHH5,qqHH_CV_1_C2V_1_kl_1,qqHH_CV_1_C2V_2_kl_1,qqHH_CV_1_C2V_1_kl_2,qqHH_CV_1_C2V_1_kl_0,qqHH_CV_0p5_C2V_1_kl_1,qqHH_CV_1p5_C2V_1_kl_1')  
+    #parser.add_option("--inp-files",type='string',dest='inp_files',default='hh_nlo_cHHH0,hh_nlo_cHHH1,hh_nlo_cHHH2p45,hh_nlo_cHHH5')  
+    #parser.add_option("--inp-files",type='string',dest='inp_files',default='hh_nlo_cHHH0,hh_nlo_cHHH1,hh_nlo_cHHH2p45,hh_nlo_cHHH5')  
     #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/04_02_2020/trees/')
     #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/')
     #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/nlo_fixed/')
     #parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/18_02_2020/nlo_updated/')
-    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/trees_systematics/nlo/')
-    parser.add_option("--out-dir",type='string',dest="out_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/workspaces_systematics/')
-    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
-    #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0')
+    #parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/trees_systematics/nlo/')
+    #parser.add_option("--out-dir",type='string',dest="out_dir",default='/scratch/nchernya/HHbbgg/18_02_2020/workspaces_systematics/')
+    parser.add_option("--inp-dir",type='string',dest="inp_dir",default='/work/nchernya/DiHiggs/inputs/16_06_2020/trees/')
+    parser.add_option("--out-dir",type='string',dest="out_dir",default='/work/nchernya/DiHiggs/inputs/16_06_2020/')
+    #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
+    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0,VBFDoubleHTag_1')
     #parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.44,0.67,0.79,1')
     #parser.add_option("--MXcats",type='string',dest="MXcats",default='250,385,470,640,10000,250,345,440,515,10000,250,330,365,545,10000')
    # parser.add_option("--MVAcats",type='string',dest="MVAcats",default='0.248,0.450,0.728,1')
@@ -225,13 +248,14 @@ def get_options():
     parser.add_option("--year",type='string',dest="year",default='2016')
     parser.add_option("--add_benchmarks",action="store_true", dest="add_benchmarks",default=False)
     parser.add_option("--config",type='string',dest="config",default='/work/nchernya/DiHiggs/inputs/20_12_2019/reweighting_normalization_18_12_2019.json')
-    parser.add_option("--btag_config",type='string',dest="btag_config",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/MetaData_HHbbgg/btagSF_08_04_2020.json')
-    parser.add_option("--LHEweight_rescale",type='string',dest="LHEweight_rescale",default='/work/nchernya/DiHiggs/inputs/18_02_2020/nlo/HH_NLO_gen_xsec_16_04_2020.json')
+    parser.add_option("--btag_config",type='string',dest="btag_config",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/MetaData_HHbbgg/btagSF_22_04_2020.json')
+    parser.add_option("--LHEweight_rescale",type='string',dest="LHEweight_rescale",default='/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/MetaData_HHbbgg/HH_NLO_gen_xsec_22_04_2020.json')
     parser.add_option("--doNLO",action="store_true", dest="doNLO",default=False)
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 
 BR_hhbbgg = 0.58*0.00227*2
+qqHH_NNLO_kfactor = 1.0347 #1.726/1.668 is sigma_NNLO+FTapprox / sigma_MG5 for SM 
 
 treeDirName = 'tagsDumper/trees/'
 #treeDirName = ''
@@ -271,9 +295,14 @@ for num,f in enumerate(input_files):
       input_names.append(name+year+'_13TeV_125_13TeV')
       target_names.append(f +'_%s_13TeV'%year)
       target_files.append('output_' + f +'_%s'%year )
-   elif not 'vbfhh' in name :
+   elif not 'vbfhh' in name and not 'qqHH' in name:
       input_names.append('hh'+year+'_13TeV_125_13TeV')
       target = 'ggHH_kl_%s_kt_1'%(name[name.find('cHHH')+len('cHHH'):])
+      target_names.append(target +'_%s_13TeV'%year)
+      target_files.append('output_' + target +'_%s'%year )
+   elif 'qqHH' in name :
+      input_names.append('vbfhh'+year+'_13TeV_125_13TeV')
+      target = name
       target_names.append(target +'_%s_13TeV'%year)
       target_files.append('output_' + target +'_%s'%year )
 
@@ -288,6 +317,7 @@ for num,f in enumerate(input_files):
  #tfilename = opt.inp_dir + "output_"+f+".root" #ivan
  tfile = ROOT.TFile(tfilename)
  if not opt.add_benchmarks : whichNodes = [1]
+ save_every_nth_event = 1
  for benchmark_num in whichNodes:
    systematics_datasets = [] 
    #define roo fit workspace
@@ -304,12 +334,8 @@ for num,f in enumerate(input_files):
              name = input_names[num]+'_'+cat+'_'+syst
              initial_name = input_names[num]+'_DoubleHTag_0_' + syst
          else : 
-             if 'vbfhh' in f :  name='VBFHHTo2B2G_CV_1_C2V_1_C3_1_TuneCP5_PSWeights_13TeV_madgraph_pythia8_13TeV_'+cat
-             else :
-                 name = input_names[num]+'_'+cat
-                 initial_name = input_names[num]+'_DoubleHTag_0'
-       #  initial_name = 'bbggSelectionTree' #ivan
-         #selection = "(MX <= %.2f and MX > %.2f) and (HHbbggMVA <= %.2f and HHbbggMVA > %.2f) and (ttHScore >= %.2f)and ((nElectrons2018+nMuons2018)==0)"%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
+             name = input_names[num]+'_'+cat
+             initial_name = input_names[num]+'_DoubleHTag_0'
          #if opt.doCategorization : selection = "(MX <= %.2f and MX > %.2f) and (MVAOutputTransformed <= %.2f and MVAOutputTransformed > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
          if opt.doCategorization : selection = "(MX <= %.2f and MX > %.2f) and (HHbbggMVA <= %.2f and HHbbggMVA > %.2f) and (ttHScore >= %.2f) "%(cat_def[cat]["MX"][0],cat_def[cat]["MX"][1],cat_def[cat]["MVA"][0],cat_def[cat]["MVA"][1],opt.ttHScore)
          if not opt.doCategorization : 
@@ -320,8 +346,12 @@ for num,f in enumerate(input_files):
             data = rpd.read_root(tfilename,'%s'%(treeDirName+initial_name)).query(selection)
             data['leadingJet_pt_Mjj'] = data['leadingJet_pt']/data['Mjj']
             data['subleadingJet_pt_Mjj'] = data['subleadingJet_pt']/data['Mjj']
-            data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/2.5 for all categories
-            if opt.doNLO : data = data.query("(abs(genweight)<0.1)") #remove crazy LHE weights 
+            #data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/2.5 for all categories
+            if not 'VBFDoubleHTag' in cat : 
+					data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/2.5 for all categories
+					print 'doing the pt/Mjj>0.55 cut' 
+
+            if opt.doNLO and not ('qqHH' in target_names[num]) : data = data.query("(abs(genweight)<0.1)") #remove crazy LHE weights 
             if cat_num == 0 :  data_structure = pd.DataFrame(data=None, columns=data.columns) 
          else :
             "USER WARNING : 0 events in ",f," syst ",syst," ,cat = ",cat 
@@ -338,11 +368,17 @@ for num,f in enumerate(input_files):
          nlo_renormalization = 1.
          if opt.doNLO and not ('qqHH' in target_names[num]): 
              sample_name = target_names[num][0:target_names[num].find('kt_1')+len('kt_1')]
-             #nlo_renormalization =  (eval_nnlo_xsec_ggF(LHEweight_rescale_dict[sample_name]['kl'])/LHEweight_rescale_dict[sample_name]['gen_xsec_powheg']*BR_hhbbgg)*LHEweight_rescale_dict[sample_name]['LHE_SF_powheg'][year] #ggHH normalization for NLO samples
              nlo_renormalization =  (eval_nnlo_xsec_ggF(LHEweight_rescale_dict[sample_name]['kl'])*BR_hhbbgg)*LHEweight_rescale_dict[sample_name]['LHE_SF_powheg'][year] #ggHH normalization for NLO samples
-         print nlo_renormalization 
-         if not opt.add_benchmarks : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm,nlo_renormalization=nlo_renormalization) #systemaitcs[1] : this should be done for nominal only, to add weights
-         else : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm,nlo_renormalization=nlo_renormalization, add_benchmarks=opt.add_benchmarks,benchmark_num=benchmark_num,benchmark_norm = calculate_benchmark_normalization(normalizations,year,benchmark_num))
+         if opt.doNLO and ('qqHH' in target_names[num]): 
+             save_every_nth_event = 4 # one quater of events used for vbfhh training
+             sample_name = target_names[num][0:target_names[num].find('_201')]#remove the year from the name
+             nlo_renormalization =  LHEweight_rescale_dict[sample_name]['gen_xsec_MG5']*qqHH_NNLO_kfactor*BR_hhbbgg #qqHH normalization
+             print  LHEweight_rescale_dict[sample_name]['gen_xsec_MG5'], qqHH_NNLO_kfactor, BR_hhbbgg #qqHH normalization
+         print nlo_renormalization,sum(data["weight"]) 
+         if not opt.add_benchmarks : systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm,nlo_renormalization=nlo_renormalization,save_every_nth_event=save_every_nth_event) #systemaitcs[1] : this should be done for nominal only, to add weights
+         else :
+             save_every_nth_event=1 
+             systematics_datasets += add_dataset_to_workspace( data, ws, newname,systematics_labels,btag_norm = btag_renorm,nlo_renormalization=nlo_renormalization,save_every_nth_event=save_every_nth_event, add_benchmarks=opt.add_benchmarks,benchmark_num=benchmark_num,benchmark_norm = calculate_benchmark_normalization(normalizations,year,benchmark_num))
          #print newname, " ::: Entries =", ws.data(newname).numEntries(), ", SumEntries =", ws.data(newname).sumEntries()
 
          masses_array = masses

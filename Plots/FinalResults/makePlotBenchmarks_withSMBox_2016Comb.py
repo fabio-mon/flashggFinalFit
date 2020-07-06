@@ -53,7 +53,7 @@ agrExp    = TGraphAsymmErrors()
 agr1sigma = TGraphAsymmErrors()
 agr2sigma = TGraphAsymmErrors()
 
-for ipt in range(0, 14):  #13 = 12 nodes + 13th SM point +14th box
+for ipt in range(0, 12):  #13 = 12 nodes + 13th SM point +14th box
     bn = ipt + 1
     agrExp.    SetPoint(agrExp.GetN(),    bn, values[bn][0])
     agr1sigma. SetPoint(agr1sigma.GetN(), bn, values[bn][0])
@@ -133,7 +133,8 @@ agr2sigma.SetLineColor(kOrange)
 # agr2sigma.GetXaxis().SetTitle("Shape benchmark")
 
 ####### the frame
-hframe = TH1F("hframe", ";Shape benchmark;95% CL on #sigma (gg#rightarrowHH) #times BR(HH#rightarrow#gamma#gammab#bar{b})  [fb]", 15, 0.01, 14.99)
+#hframe = TH1F("hframe", ";Shape benchmark;95% CL on #sigma (gg#rightarrowHH) #times BR(HH#rightarrow#gamma#gammab#bar{b})  [fb]", 15, 0.01, 14.99)
+hframe = TH1F("hframe", ";Shape benchmark;95% CL on #sigma (gg#rightarrowHH) #times BR(HH#rightarrow#gamma#gammab#bar{b})  [fb]", 13, 0.01, 12.99)
 hframe.SetStats(0)
 # hframe.SetMinimum(1.0)
 # hframe.SetMaximum(5000)
@@ -225,7 +226,8 @@ pt.SetTextSize(0.05)
 pt.SetFillColor(0)
 pt.SetFillStyle(0)
 #pt.AddText("CMS #font[52]{Supplementary}" )
-pt.AddText("CMS #font[52]{Preliminary}" )
+#pt.AddText("CMS #font[52]{Preliminary}" )
+pt.AddText("CMS" )
 
 off1bis = 0.065
 off1bisx = 0.015
@@ -290,8 +292,8 @@ for ival in range(0, 12):
     else: ttext_label.DrawLatex(0.85+ival-0.15, ymin_labels, str(ival+1))
 # ttext_label.DrawLatex(0.8+12-0.3, ymin_labels, 'k_{#lambda}=0')
 # ttext_label.DrawLatex(0.8+13, ymin_labels, 'SM')
-ttext_label.DrawLatex(0.8+12-0.2, ymin_labels, 'SM')
-ttext_label.DrawLatex(0.8+13-0.1, ymin_labels, 'k_{#lambda}=0')
+#ttext_label.DrawLatex(0.8+12-0.2, ymin_labels, 'SM')
+#ttext_label.DrawLatex(0.8+13-0.1, ymin_labels, 'k_{#lambda}=0')
 
 # ymin_labels = 0.01
 # for ival in range(0, 12):
@@ -308,7 +310,7 @@ pt4.Draw()
 c1.Update()
 raw_input()
 
-c1.Print('%s/benchmark_plot_%s.pdf'%(options.outdir,options.outtag), 'pdf')
+c1.Print('%s/benchmark_plot_%s_BSMonly.pdf'%(options.outdir,options.outtag), 'pdf')
 
 #### print a text table
 print "%10s %20s %20s, %20s, %20s, %20s, %20s" % ("BENCH", "EXP" , "OBS", "+2sigma", "+1sigma", "-1sigma", "-2sigma")

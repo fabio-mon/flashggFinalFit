@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "TGaxis.h"
 
 #include "TFile.h"
 #include "TMath.h"
@@ -514,7 +515,9 @@ void Plot(RooRealVar *mass, RooDataSet *data, RooAbsPdf *pdf, pair<double,double
   //TLatex lat1(0.65,0.85,"#splitline{CMS Simulation}{}");
   
   TString newtitle = "H#rightarrow#gamma#gamma";
-  if (title.find("hh") != std::string::npos) newtitle = "HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
+  //if (title.find("hh") != std::string::npos) newtitle = "HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
+  if ((title.find("vbfhh") != std::string::npos) || (title.find("qqHH") != std::string::npos)) newtitle = "VBF HH#rightarrow#gamma#gammab#bar{b}"; 
+  else if (title.find("hh") != std::string::npos) newtitle = "ggF HH#rightarrow#gamma#gammab#bar{b}"; 
   TLatex  lat1(.129+0.03+offset,0.85,newtitle);
   lat1.SetNDC(1);
   lat1.SetTextSize(0.047);
@@ -525,17 +528,21 @@ void Plot(RooRealVar *mass, RooDataSet *data, RooAbsPdf *pdf, pair<double,double
   catLabel_humanReadable.ReplaceAll("GluGluToHHTo2B2G_node_SM_13TeV_madgraph_2017","");
   catLabel_humanReadable.ReplaceAll("GluGluToHHTo2B2G_node_SM_13TeV_madgraph","");
   catLabel_humanReadable.ReplaceAll("hh_node_SM_","");
+  catLabel_humanReadable.ReplaceAll("qqHH_CV_1_C2V_1_kl_1_","");
   catLabel_humanReadable.ReplaceAll("GluGluToHToGG","GF Tag");
-  catLabel_humanReadable.ReplaceAll("_"," ");
+//  catLabel_humanReadable.ReplaceAll("_"," ");
   catLabel_humanReadable.ReplaceAll("UntaggedTag","Untagged");
   catLabel_humanReadable.ReplaceAll("VBFTag","VBF Tag");
-  catLabel_humanReadable.ReplaceAll("VBF","VBF Tag");
+  //catLabel_humanReadable.ReplaceAll("VBF","VBF Tag");
   catLabel_humanReadable.ReplaceAll("TTHLeptonicTag","TTH Leptonic Tag");
   catLabel_humanReadable.ReplaceAll("ttH","TTH Tag");
   catLabel_humanReadable.ReplaceAll("VH","VH Tag");
   catLabel_humanReadable.ReplaceAll("TTHHadronicTag","TTH Hadronic Tag");
   catLabel_humanReadable.ReplaceAll("all","All Categories");
-  catLabel_humanReadable.ReplaceAll("DoubleHTag","CAT");
+  catLabel_humanReadable.ReplaceAll("VBFDoubleHTag","VBF DoubleHTag");
+  catLabel_humanReadable.ReplaceAll("DoubleHTag","ggF CAT");
+  catLabel_humanReadable.ReplaceAll("2018","");
+  catLabel_humanReadable.ReplaceAll("_"," ");
 
   TLatex lat2(0.93,0.88,catLabel_humanReadable);
   lat2.SetTextAlign(33);
@@ -570,8 +577,10 @@ void Plot(RooRealVar *mass, RooDataSet *data, RooAbsPdf *pdf, pair<double,double
     negBinsArrow->Draw("same <>");
 
   }
-  string sim="Simulation Preliminary";
-  //string sim="Simulation"; //for the paper
+//  string sim="Simulation Preliminary";
+  TGaxis::SetExponentOffset(-0.09,0,"xy");
+  TGaxis::SetMaxDigits(4);
+  string sim="Simulation"; //for the paper
   CMS_lumi( canv, 0,0,sim);
   canv->Print(Form("%s.pdf",savename.c_str()));
   canv->Print(Form("%s.png",savename.c_str()));

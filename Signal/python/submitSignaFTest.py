@@ -15,6 +15,8 @@ from Queue import Queue
 
 from threading import Thread, Semaphore
 from multiprocessing import cpu_count
+import subprocess
+
 
 class Wrap:
     def __init__(self, func, args, queue):
@@ -141,7 +143,7 @@ def writePreamble(sub_file):
       sub_file.write('tmpdir=/scratch/$USER/$RANDOM\n')
       sub_file.write('mkdir -p $tmpdir\n')
       sub_file.write('cd $tmpdir\n')
-  else :
+  if( opts.batch == "HTCONDOR" ):
       sub_file.write('number=$RANDOM\n')
       sub_file.write('mkdir -p scratch_$number\n')
       sub_file.write('cd scratch_$number\n')
@@ -178,6 +180,24 @@ def writePostamble(sub_file, exec_line):
           command = 'sbatch %s > out.txt'%(os.path.abspath(sub_file.name))
           print command
           system(command)
+    if( opts.batch == "HTCONDOR" ):
+      sub_file_name = re.sub("\.sh","",os.path.abspath(sub_file.name))
+      HTCondorSubfile = open("%s.sub"%sub_file_name,'w')
+      HTCondorSubfile.write('+JobFlavour = "%s"\n'%(opts.queue))
+      HTCondorSubfile.write('\n')
+      HTCondorSubfile.write('executable  = %s.sh\n'%sub_file_name)
+      HTCondorSubfile.write('output  = %s.out\n'%sub_file_name)
+      HTCondorSubfile.write('error  = %s.err\n'%sub_file_name)
+      HTCondorSubfile.write('log  = %s.log\n'%sub_file_name)
+      HTCondorSubfile.write('\n')
+      HTCondorSubfile.write('max_retries = 1\n')
+      HTCondorSubfile.write('queue 1\n')
+      subprocess.Popen("condor_submit "+HTCondorSubfile.name,
+                             shell=True, # bufsize=bufsize,
+                             stdin=subprocess.PIPE,
+                             stdout=subprocess.PIPE,
+                             stderr=subprocess.PIPE,
+                             close_fds=True)
 
 
 #######################################

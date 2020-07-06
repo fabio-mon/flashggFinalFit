@@ -1,0 +1,18 @@
+{
+  "all":"All Categories",
+  "wall":"#splitline{All Categories}{S/(S+B) weighted}",
+  "DoubleHTag_0_13TeV":"ggF CAT 0",
+  "DoubleHTag_1_13TeV":"ggF CAT 1",
+  "DoubleHTag_2_13TeV":"ggF CAT 2",
+  "DoubleHTag_3_13TeV":"ggF CAT 3",
+  "DoubleHTag_4_13TeV":"ggF CAT 4",
+  "DoubleHTag_5_13TeV":"ggF CAT 5",
+  "DoubleHTag_6_13TeV":"ggF CAT 6",
+  "DoubleHTag_7_13TeV":"ggF CAT 7",
+  "DoubleHTag_8_13TeV":"ggF CAT 8",
+  "DoubleHTag_9_13TeV":"ggF CAT 9",
+  "DoubleHTag_10_13TeV":"ggF  CAT 10",
+  "DoubleHTag_11_13TeV":"ggF  CAT 11",
+  "VBFDoubleHTag_0_13TeV":"VBF CAT 0",
+  "VBFDoubleHTag_1_13TeV":"VBF CAT 1"
+}

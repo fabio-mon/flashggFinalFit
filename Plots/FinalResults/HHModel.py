@@ -430,13 +430,22 @@ class HHModel(PhysicsModel):
 
 # VBF : val_CV, val_C2V, val_kl
 VBF_sample_list = [
-    VBFHHSample(1,1,1,   val_xs = 0.00054/(0.3364), label = 'qqHH_CV_1_C2V_1_kl_1'  ),
-    VBFHHSample(1,2,1,   val_xs = 0.00472/(0.3364), label = 'qqHH_CV_1_C2V_2_kl_1'  ),
-    VBFHHSample(1,1,2,   val_xs = 0.00044/(0.3364), label = 'qqHH_CV_1_C2V_1_kl_2'  ),
-    VBFHHSample(1,1,0,   val_xs = 0.00145/(0.3364), label = 'qqHH_CV_1_C2V_1_kl_0'  ),
-    VBFHHSample(0.5,1,1, val_xs = 0.00353/(0.3364), label = 'qqHH_CV_0p5_C2V_1_kl_1'),
-    VBFHHSample(1.5,1,1, val_xs = 0.02149/(0.3364), label = 'qqHH_CV_1p5_C2V_1_kl_1'),
+    VBFHHSample(1,1,1,   val_xs = 0.001668, label = 'qqHH_CV_1_C2V_1_kl_1'  ),
+    VBFHHSample(1,2,1,   val_xs = 0.01374, label = 'qqHH_CV_1_C2V_2_kl_1'  ),
+    VBFHHSample(1,1,2,   val_xs = 0.001375, label = 'qqHH_CV_1_C2V_1_kl_2'  ),
+    VBFHHSample(1,1,0,   val_xs = 0.004454, label = 'qqHH_CV_1_C2V_1_kl_0'  ),
+   # VBFHHSample(0.5,1,1, val_xs = 0.01046, label = 'qqHH_CV_0p5_C2V_1_kl_1'),
+    VBFHHSample(1.5,1,1, val_xs = 0.0638, label = 'qqHH_CV_1p5_C2V_1_kl_1'),
+    VBFHHSample(1,0,1,   val_xs = 0.02617, label = 'qqHH_CV_1_C2V_0_kl_1')
 ]
+#VBF_sample_list_old = [
+#    VBFHHSample(1,1,1,   val_xs = 0.00054/(0.3364), label = 'qqHH_CV_1_C2V_1_kl_1'  ),
+#    VBFHHSample(1,2,1,   val_xs = 0.00472/(0.3364), label = 'qqHH_CV_1_C2V_2_kl_1'  ),
+#    VBFHHSample(1,1,2,   val_xs = 0.00044/(0.3364), label = 'qqHH_CV_1_C2V_1_kl_2'  ),
+#    VBFHHSample(1,1,0,   val_xs = 0.00145/(0.3364), label = 'qqHH_CV_1_C2V_1_kl_0'  ),
+#    VBFHHSample(0.5,1,1, val_xs = 0.00353/(0.3364), label = 'qqHH_CV_0p5_C2V_1_kl_1'),
+#    VBFHHSample(1.5,1,1, val_xs = 0.02149/(0.3364), label = 'qqHH_CV_1p5_C2V_1_kl_1'),
+#]
 
 # VBF : val_kl, val_kt
 GGF_sample_list = [
@@ -485,12 +494,14 @@ HHcomb3 = HHModel(
     name            = 'HHcomb3'
 )
 
-# g = GGFHHFormula(GGF_sample_list)
-# print g.sigma
-# print g.sigma.evalf(subs = {
-#     kl : 2.45,
-#     kt : 1.0,
-#     s1 : s.sample_list[0].val_xs,
-#     s2 : s.sample_list[1].val_xs,
-#     s3 : s.sample_list[2].val_xs,
-# })
+g = GGFHHFormula(GGF_sample_list_comb3)
+print g.sigma
+v = VBFHHFormula(VBF_sample_list)
+print v.sigma
+#print g.sigma.evalf(subs = {
+#    kl : 2.45,
+#    kt : 1.0,
+#    s1 : s.sample_list[0].val_xs,
+#    s2 : s.sample_list[1].val_xs,
+#    s3 : s.sample_list[2].val_xs,
+#})

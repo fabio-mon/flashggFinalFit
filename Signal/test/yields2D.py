@@ -8,6 +8,7 @@ import json
 
 #date = '06_05_2019' 
 date = '18_02_2020'
+#date = '22_04_2020'
 #date = '27_03_2020'
 #date = '03_02_2020'
 
@@ -24,6 +25,7 @@ date = '18_02_2020'
 #filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/inputs/CMS-HGG_sigfit_MggMjj_2018_27_03_2020.root'
 #filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/inputs/CMS-HGG_sigfit_MggMjj_2016_2017_2018_18_02_2020_Mjj_merged_70GeV.root'
 filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/inputs/CMS-HGG_sigfit_MggMjj_2016_2017_2018_18_02_2020_nlo_merged_70GeV.root'
+#filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/inputs/CMS-HGG_sigfit_MggMjj_2018_22_04_2020_70GeV.root'
 #filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Signal/output/mjj/18_02_2020_soumya/workspace_out_wo_ggHH_2018.root'
 #filename = '/work/nchernya/DiHiggs/CMSSW_7_4_7/src/flashggFinalFit/Plots/FinalResults/inputs/CMS-HGG_sigfit_MggMjj_2016_2017_2018_%s_Mjj_merged_70GeV.root'%date
 #CMS-HGG_sigfit_2016_2017_2018_25_10_2019.root' #CMS-HGG_sigfit_allAndNodes2016_2017_2018_25_10_2019.root'
@@ -34,14 +36,17 @@ wsname_bkg = 'multipdf'
 symbol = ''  #for keynote
 #symbol = '&'  #for latex
 
-lumi_2016=35.9*1000
-lumi_2017=41.5*1000
-lumi_2018=59.5*1000
-#lumi_2016=1000
-#lumi_2017=1000
-#lumi_2018=1000
+#lumi_2016=35.9*1000
+#lumi_2017=41.5*1000
+#lumi_2018=59.5*1000
+lumi_2016=1000
+lumi_2017=1000
+lumi_2018=1000
 SMsignal=31.05*0.58*0.00227*2  #new most updated x-sec
 vbfSMsignal=1.726*0.58*0.00227*2  #new most updated x-sec
+
+SMsignal=1.
+vbfSMsignal=1.
 
 
 #names="ggh_2016,qqh_2016,tth_2016,vh_2016,hh_node_SM_2016,ggh_2017,qqh_2017,tth_2017,vh_2017,hh_node_SM_2017,ggh_2018,qqh_2018,tth_2018,vh_2018,hh_node_SM_2018".split(',')
@@ -53,7 +58,8 @@ names="ggh_2018,qqh_2018,tth_2018,vh_2018,hh_node_SM_2018,vbfhh_2018".split(',')
 #names="ggh_2016,qqh_2016,tth_2016,vh_2016,ggHH_kl_1_kt_1_2016,ggh_2017,qqh_2017,tth_2017,vh_2017,ggHH_kl_1_kt_1_2017,ggh_2018,qqh_2018,tth_2018,vh_2018,ggHH_kl_1_kt_1_2018".split(',')
 
 #names="hh_node_SM_2016,hh_node_SM_2017,hh_node_SM_2018".split(',')
-names="ggHH_kl_1_kt_1_2016,ggHH_kl_1_kt_1_2017,ggHH_kl_1_kt_1_2018".split(',')
+#names="ggHH_kl_1_kt_1_2016,ggHH_kl_1_kt_1_2017,ggHH_kl_1_kt_1_2018".split(',')
+names="ggHH_kl_0_kt_1_2018,ggHH_kl_1_kt_1_2018,ggHH_kl_2p45_kt_1_2018,ggHH_kl_5_kt_1_2018".split(',')
 
 sum_entries = dict()
 sum_entries_bkg = dict()
@@ -92,12 +98,12 @@ for name in names:
 		sum+=count
 		entries_per_cat[name].append(count)
 	#	print '%.2f\t'%(count),
-		print '%.4f\t'%(count),'%s'%symbol,
+		print '%.6f\t'%(count),'%s'%symbol,
 	#	print '%.6f\t'%(count),'%s'%symbol
 	if symbol=='&' : 
 	  print '%.2f \\\\'%sum
 	#else : print '%.2f'%sum
-	else : print '%.4f'%sum
+	else : print '%.6f'%sum
 
 
 

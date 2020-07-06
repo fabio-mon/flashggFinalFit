@@ -12,6 +12,7 @@
 #include <TH2F.h>
 #include <TCanvas.h>
 #include <TPaveText.h>
+#include "TGaxis.h"
 
 // RooFit headers
 #include <RooWorkspace.h>
@@ -87,11 +88,13 @@ bool mergeFitMVAcats_;
 int nCats_;
 int nMVA_;
 int nMX_;
+bool paper_;
 
 void OptionParser(int argc, char *argv[]){
 	po::options_description desc1("Allowed options");
 	desc1.add_options()
 		("indir,d", po::value<string>(&indir_), "Input file dir")
+		("paper", po::value<bool>(&paper_)->default_value(false), "Style for paper")
 		("infiles,i", po::value<string>(&infilesStr_)->default_value(""), "Input files (comma sep), without inputdir")
 		("infileWithAllYears", po::value<string>(&infileWithAllYearsStr_)->default_value(""), "Files(comma sep) with all years if you want to merge 2016,2017 and 2018. Input dir should be already in the name")
 		("template,t", po::value<string>(&templatefile_), "Fit template file name")
@@ -102,9 +105,9 @@ void OptionParser(int argc, char *argv[]){
 		("plotdir,p", po::value<string>(&plotdir_)->default_value("test/"), "Plot dir")
 		("procs", po::value<string>(&procStr_)->default_value("hh_node_SM,ggh,qqh,vh,tth"), "Processes (comma sep)")
 		//("signalproc,s", po::value<string>(&signalproc_)->default_value("hh_node_SM"), "Name of the signal process")
-		("signalproc,s", po::value<string>(&signalprocStr_)->default_value("hh_node_SM,ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1"), "Name of the signal process")
-		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11"), "Flashgg categories")
-//		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0"), "Flashgg categories")
+		("signalproc,s", po::value<string>(&signalprocStr_)->default_value("hh_node_SM,ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1,qqHH_CV_1_C2V_1_kl_1,qqHH_CV_1_C2V_2_kl_1,qqHH_CV_1_C2V_1_kl_2,qqHH_CV_1_C2V_1_kl_0,qqHH_CV_0p5_C2V_1_kl_1,qqHH_CV_1p5_C2V_1_kl_1,qqHH_CV_1_C2V_0_kl_1"), "Name of the signal process")
+//		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11"), "Flashgg categories")
+		("flashggCats,f", po::value<string>(&flashggCatsStr_)->default_value("DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0,VBFDoubleHTag_1"), "Flashgg categories")
 		("nCats", po::value<int>(&nCats_)->default_value(12), "Numer of flashgg categories")
 		("nMVA", po::value<int>(&nMVA_)->default_value(3+1), "Numer of MVA categories")
 		("nMX", po::value<int>(&nMX_)->default_value(4), "Numer of MX categories")
@@ -130,9 +133,9 @@ void OptionParser(int argc, char *argv[]){
 }
 
 
-/*
+
 // get FWHHM
-vector<double> getFWHM(TH1F *hist) {
+vector<double> getFWHM(TH1F *h) {
   cout << "Computing FWHM...." << endl;
   double hm = h->GetMaximum()*0.5;
   double low = h->GetBinCenter(h->FindFirstBinAbove(hm));
@@ -145,10 +148,69 @@ vector<double> getFWHM(TH1F *hist) {
   result.push_back(hm);
   result.push_back(h->GetBinWidth(1));
   return result;
-}*/
+}
 
 
-void RooDraw(TCanvas *can, TH1F *h, RooPlot* frame,RooDataHist* hist, RooAbsPdf* model,string iproc,string category, bool putyear){
+pair<double,double> getEffSigma(RooRealVar *mass, RooAbsPdf *pdf, double wmin=90., double wmax=170., double step=0.5, double epsilon=1.e-2){
+//pair<double,double> getEffSigma(RooRealVar *mass, RooAbsPdf *pdf, double wmin=90., double wmax=170., double step=0.5, double epsilon=1.e-1){
+
+  RooAbsReal *cdf = pdf->createCdf(RooArgList(*mass));
+  cout << "Computing effSigma...." << endl;
+  TStopwatch sw;
+  sw.Start();
+  double point=wmin;
+  vector<pair<double,double> > points;
+
+  while (point <= wmax){
+    mass->setVal(point);
+    if (pdf->getVal() > epsilon){
+      points.push_back(pair<double,double>(point,cdf->getVal())); 
+    }
+    point+=step;
+  }
+  double low = wmin;
+  double high = wmax;
+  double width = wmax-wmin;
+  for (unsigned int i=0; i<points.size(); i++){
+    for (unsigned int j=i; j<points.size(); j++){
+      double wy = points[j].second - points[i].second;
+      if (TMath::Abs(wy-0.683) < epsilon){
+        double wx = points[j].first - points[i].first;
+        if (wx < width){
+          low = points[i].first;
+          high = points[j].first;
+          width=wx;
+        }
+      }
+    }
+  }
+  sw.Stop();
+  cout << "effSigma: [" << low << "-" << high << "] = " << width/2. << endl;
+  //cout << "\tTook: "; sw.Print();
+  pair<double,double> result(low,high);
+  return result;
+}
+
+
+void RooDraw(TCanvas *can, TH1F *h, RooPlot* frame,RooDataHist* hist, RooAbsPdf* model,string iproc,string category, bool putyear, bool calc_width, pair<double,double> sigRange,vector<double> fwhmRange){
+
+   double semin;
+   double semax;
+   double fwmin;
+   double fwmax;
+   double halfmax;
+   double binwidth;
+	TObject *seffLeg;
+
+   if (calc_width) {
+      semin=sigRange.first;
+      semax=sigRange.second;
+      fwmin=fwhmRange[0];
+      fwmax=fwhmRange[1];
+      halfmax=fwhmRange[2];
+      binwidth=fwhmRange[3];
+   }
+
   	can->SetLeftMargin(0.16);
   	can->SetTickx(); can->SetTicky();
 	can->cd();
@@ -159,8 +221,9 @@ void RooDraw(TCanvas *can, TH1F *h, RooPlot* frame,RooDataHist* hist, RooAbsPdf*
 	frame->GetYaxis()->SetTitleSize(0.05);
 	frame->GetYaxis()->SetTitleOffset(1.5);
 	frame->SetMinimum(0.0);
-	TGaxis::SetExponentOffset(-0.07,0,"xy");
-   frame->GetYaxis()->SetTitle(Form("Events / (%.1f GeV)",h->GetBinWidth(1)));
+	TGaxis::SetExponentOffset(-0.09,0,"xy");
+	TGaxis::SetMaxDigits(4);
+   frame->GetYaxis()->SetTitle(Form("Events / ( %.1f GeV )",h->GetBinWidth(1)));
    frame->GetYaxis()->SetNdivisions(505);
 	frame->GetYaxis()->SetRangeUser(0.,h->GetBinContent(h->GetMaximumBin())*1.2);
  	frame->Draw();
@@ -170,39 +233,71 @@ void RooDraw(TCanvas *can, TH1F *h, RooPlot* frame,RooDataHist* hist, RooAbsPdf*
 	if (norm<0) norm=0.;
 	model->plotOn(frame,Normalization(norm,RooAbsReal::NumEvent),LineColor(kBlue),LineWidth(2),FillStyle(0));
 	TObject *pdfLeg = frame->getObject(int(frame->numItems()-1));
+	if (calc_width) {
+   	model->plotOn(frame,Range(semin,semax),FillColor(19),DrawOption("F"),LineWidth(2),FillStyle(1001),VLines(),LineColor(15));
+  		seffLeg = frame->getObject(int(frame->numItems()-1));
+  		model->plotOn(frame,Range(semin,semax),LineColor(15),LineWidth(2),FillStyle(1001),VLines());
+	}
+	hist->plotOn(frame,MarkerStyle(kOpenSquare));
+	model->plotOn(frame,Normalization(norm,RooAbsReal::NumEvent),LineColor(kBlue),LineWidth(2),FillStyle(0));
 	frame->Draw("same");
 
 	double offset =0.05;
 	TString newtitle = iproc;
 	if (iproc.find("vbfhh") != std::string::npos) newtitle = "VBF HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
 	else if (iproc.find("hh") != std::string::npos) newtitle = "ggF HH SM : H#rightarrow bb H#rightarrow#gamma#gamma"; 
+	if (paper_) if (iproc.find("hh_node_SM") != std::string::npos) newtitle = "ggF HH#rightarrow#gamma#gammab#bar{b}"; 
+	if (paper_) if (iproc.find("qqHH") != std::string::npos) newtitle = "VBF HH#rightarrow#gamma#gammab#bar{b}"; 
 	TLatex *lat1 = new TLatex(.129+0.03+offset,0.85,newtitle);
 	lat1->SetNDC(1);
 	lat1->SetTextSize(0.047);
 
 	TString catLabel_humanReadable  = year_+" "+category;
 	if (!putyear) catLabel_humanReadable  = category;
+	if (paper_) catLabel_humanReadable  = category;
 	catLabel_humanReadable.ReplaceAll("_"," ");
-	catLabel_humanReadable.ReplaceAll("DoubleHTag"," CAT");
+	catLabel_humanReadable.ReplaceAll("VBFDoubleHTag","VBF CAT");
+	catLabel_humanReadable.ReplaceAll("DoubleHTag","ggF CAT");
 	TLatex *lat2 = new TLatex(0.93,0.88,catLabel_humanReadable);
 	lat2->SetTextAlign(33);
 	lat2->SetNDC(1);
 	lat2->SetTextSize(0.045);
 
 
-	TLegend *leg = new TLegend(0.15+offset,0.60,0.5+offset,0.82);
+	//TLegend *leg = new TLegend(0.15+offset,0.40,0.5+offset,0.82);
+	TLegend *leg = new TLegend(0.6+offset,0.40,0.95+offset,0.82);
 	leg->SetFillStyle(0);
 	leg->SetLineColor(0);
 	leg->SetTextSize(0.037);
+	leg->SetBorderSize(0);
 	leg->AddEntry(dataLeg,"#bf{Simulation}","lep");
 	leg->AddEntry(pdfLeg,"#splitline{#bf{Parametric}}{#bf{model}}","l");
+
+
+	if (calc_width) {
+		leg->AddEntry(seffLeg,Form("#bf{#sigma_{eff} = %1.1f GeV}",0.5*(semax-semin)),"fl");
+		halfmax*=(frame->getFitRangeBinW()/binwidth);
+		TArrow *fwhmArrow = new TArrow(fwmin,halfmax,fwmax,halfmax,0.02,"<>");
+		fwhmArrow->SetLineWidth(2.);
+		//TPaveText *fwhmText = new TPaveText(0.17+offset,0.3,0.45+offset,0.40,"brNDC");
+		TPaveText *fwhmText = new TPaveText(0.56+offset,0.3,.97+offset,0.40,"brNDC");
+		//fwhmText->SetFillColor(0);
+		fwhmText->SetBorderSize(0);
+		fwhmText->SetFillStyle(0);
+		fwhmText->SetLineColor(kWhite);
+		fwhmText->SetTextSize(0.037);
+		fwhmText->AddText(Form("FWHM = %1.1f GeV",(fwmax-fwmin)));	
+		fwhmArrow->Draw("same <>");
+		fwhmText->Draw("same");
+	}
 
 	lat2->Draw("same");
 	lat1->Draw("same");
 	leg->Draw("same");
 
-	string sim="Simulation Preliminary";
-	//string sim="Simulation"; //for the paper
+	TString sim="Simulation Preliminary";
+   writeExtraText = true;
+	if (paper_) sim="Simulation"; //for the paper
 	CMS_lumi( can, 0,0,sim);
 	can->Update();
 }
@@ -360,7 +455,7 @@ int main(int argc, char *argv[]){
 			}
 
 			int c = stoi(icat.substr(icat.find_last_of("_")+1)); //find category number used
-			if (icat.find("VBFDoubleHTag") != string::npos ) c = 12; //category number is 12 if it is VBFDoubleHTAg
+			if (icat.find("VBFDoubleHTag") != string::npos ) c = 12+stoi(icat.substr(icat.find_last_of("_")+1)); //category number is 12+0/1/2.... if it is VBFDoubleHTAg
 			
 			if(iproc.find("ggh") != string::npos || iproc.find("qqh") != string::npos) {
 					MjjSig[ic] = new RooBernstein(("MjjHig_"+iproc+"_cat"+std::to_string(c)).c_str(),"",*Mjj,
@@ -442,12 +537,18 @@ int main(int argc, char *argv[]){
 			w->factory(EditPDF.c_str());
 
 			///Plot everything 
-			double putyear = 1;
+			double putyear = 1;	
+			bool calc_width=1;
 			TH1F *h = new TH1F(("h_"+iproc+"_"+year_+"_"+icat).c_str(),("h_"+iproc+"_"+year_+"_"+icat).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
 			MjjSig[ic]->fillHistogram(h,RooArgList(*Mjj),sigToFit[ic]->sumEntries());
+			TH1F *h_fine = new TH1F(("h_"+iproc+"_"+year_+"_"+icat+"_fine").c_str(),("h_"+iproc+"_"+year_+"_"+icat+"_fine").c_str(),nbins*50,minSigFitMjj,maxSigFitMjj);
+			MjjSig[ic]->fillHistogram(h_fine,RooArgList(*Mjj),sigToFit[ic]->sumEntries());
+			pair<double,double> thisSigRange = getEffSigma(Mjj,MjjSig[ic]);
+			vector<double> fwhmRange = getFWHM(h_fine);		
+
 			TCanvas* can = new TCanvas("can","can",650,650);
-			RooDraw(can,h,Mjj->frame(),((RooDataHist*)sigToFit[ic]),MjjSig[ic],iproc,(icat),putyear);
-			string canname = plotdir_+"fit_"+iproc+"_"+year_+"_"+icat;
+			RooDraw(can,h,Mjj->frame(),((RooDataHist*)sigToFit[ic]),MjjSig[ic],iproc,(icat),putyear,calc_width, thisSigRange,fwhmRange);
+			string canname = plotdir_+"/fit_"+iproc+"_"+year_+"_"+icat;
 			can->Print((canname+".pdf").c_str());
 			can->Print((canname+".jpg").c_str());
   			delete can;
@@ -456,10 +557,15 @@ int main(int argc, char *argv[]){
 			if ((mergeFitMVAcats_) && (NCAT==nCats_)){  //only works in case the set of categories is complete
 				TH1F *hMVA = new TH1F(("hMVA_"+iproc+"_"+year_+"_"+icat).c_str(),("hMVA_"+iproc+"_"+year_+"_"+icat).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
 				MjjSig[ic]->fillHistogram(hMVA,RooArgList(*Mjj),sigToFitMVA[categories_scheme[ic]]->sumEntries());
+				TH1F *hMVA_fine = new TH1F(("hMVA_"+iproc+"_"+year_+"_"+icat+"_fine").c_str(),("hMVA_"+iproc+"_"+year_+"_"+icat+"_fine").c_str(),nbins*50,minSigFitMjj,maxSigFitMjj);
+				MjjSig[ic]->fillHistogram(hMVA_fine,RooArgList(*Mjj),sigToFitMVA[categories_scheme[ic]]->sumEntries());
+				thisSigRange = getEffSigma(Mjj,MjjSig[ic]);
+				fwhmRange = getFWHM(hMVA_fine);		
+
 
 				TCanvas* canMVA = new TCanvas("canMVA","canMVA",650,650);
-				RooDraw(canMVA,hMVA,Mjj->frame(),((RooDataHist*)sigToFitMVA[categories_scheme[ic]]),MjjSig[ic],iproc,("MVA "+to_string(categories_scheme[ic])),putyear);
-				string cannameMVA = plotdir_+"fit_"+iproc+"_"+year_+"_MVA"+to_string(categories_scheme[ic]);
+				RooDraw(canMVA,hMVA,Mjj->frame(),((RooDataHist*)sigToFitMVA[categories_scheme[ic]]),MjjSig[ic],iproc,("MVA "+to_string(categories_scheme[ic])),putyear,calc_width, thisSigRange,fwhmRange);
+				string cannameMVA = plotdir_+"/fit_"+iproc+"_"+year_+"_MVA"+to_string(categories_scheme[ic]);
 				canMVA->Print((cannameMVA+".pdf").c_str());
 				canMVA->Print((cannameMVA+".jpg").c_str());
   				delete canMVA;
@@ -467,10 +573,14 @@ int main(int argc, char *argv[]){
 			if (!mergeYearsStr_.empty()){  
 				TH1F *hAllYears = new TH1F(("hAllYears_"+iproc+"_"+year_+"_"+icat).c_str(),("hAllYears_"+iproc+"_"+year_+"_"+icat).c_str(),nbins,minSigFitMjj,maxSigFitMjj);
 				MjjSig[ic]->fillHistogram(hAllYears,RooArgList(*Mjj),sigToFitAllYears[ic]->sumEntries());
+				TH1F *hAllYears_fine = new TH1F(("hAllYears_"+iproc+"_"+year_+"_"+icat+"_fine").c_str(),("hAllYears_"+iproc+"_"+year_+"_"+icat+"_fine").c_str(),nbins*50,minSigFitMjj,maxSigFitMjj);
+				MjjSig[ic]->fillHistogram(hAllYears_fine,RooArgList(*Mjj),sigToFitAllYears[ic]->sumEntries());
+				thisSigRange = getEffSigma(Mjj,MjjSig[ic]);
+				fwhmRange = getFWHM(hAllYears_fine);		
 
 				TCanvas* canAllYears = new TCanvas("canAllYears","canAllYears",650,650);
-				RooDraw(canAllYears,hAllYears,Mjj->frame(),((RooDataHist*)sigToFitAllYears[ic]),MjjSig[ic],iproc,(icat),putyear);
-				string cannameAllYears = plotdir_+"fit_"+iproc+"_"+year_+"_AllYears_"+icat;
+				RooDraw(canAllYears,hAllYears,Mjj->frame(),((RooDataHist*)sigToFitAllYears[ic]),MjjSig[ic],iproc,(icat),putyear,calc_width, thisSigRange,fwhmRange);
+				string cannameAllYears = plotdir_+"/fit_"+iproc+"_"+year_+"_AllYears_"+icat;
 				canAllYears->Print((cannameAllYears+".pdf").c_str());
 				canAllYears->Print((cannameAllYears+".jpg").c_str());
   				delete canAllYears;
@@ -480,9 +590,8 @@ int main(int argc, char *argv[]){
 			string finalpdfname = "hbbpdfsm_13TeV_"+iproc+"_"+year_+"_"+icat;
 			wAll->import(*w->pdf(finalpdfname.c_str()));
 			wAll->import( *w->function((finalpdfname+"_norm").c_str()));
-
 		}
-		wAll->writeToFile((outdir_+"workspace_out_"+iproc+"_"+year_+".root").c_str());
+		wAll->writeToFile((outdir_+"/workspace_out_"+iproc+"_"+year_+".root").c_str());
 		iproc_num+=1;
 	}
 	std::cout<<"All fits have finished, now merge the workspaces : mergeWorkspace.py workspace_out_mjj.root *.root"<<std::endl;	

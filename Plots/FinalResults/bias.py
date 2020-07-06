@@ -36,7 +36,8 @@ safe=False
 n_toys=0
 for inum,entry in enumerate(tree):
   if (inum)%3==0 : 
-     if tree.r>0.0101 :
+     #if tree.r>0.0101 :  #if have to do one sided gaussian because of negative poisson
+     if tree.r>-100000. :  #no condition
        r.append(tree.r)
        safe=True
        n_toys+=1
@@ -50,9 +51,8 @@ for inum,entry in enumerate(tree):
 r=np.array(r)
 rLow=np.array(rLow)
 #rErr = abs(r-rLow)
-rErr = abs(rUp-r)
-#rErr = abs((rUp-rLow)/2.)
-print r, min(r)
+#rErr = abs(rUp-r)
+rErr = abs((rUp-rLow)/2.)
 for i in range(0,len(r)):
   hist_all.Fill((r[i]-float(mu))/(rErr[i]))
 #n_toys = tree.GetEntries("fit_status==0")
@@ -60,6 +60,8 @@ print n_toys,hist_all.Integral()
 
 mean = hist_all.GetMean()
 rms =  hist_all.GetRMS()
+print 'Mean = ',mean
+print 'RMS = ',rms
 hist_all.SetStats(False)
 hist_all.SetLineColor(1)
 hist_all.SetLineWidth(2)
@@ -69,7 +71,7 @@ hist_all.GetXaxis().SetTitle("(#mu-#mu_{inj})/#sigma")
 hist_all.GetYaxis().SetTitle("Toys")
 hist_all.Draw()
 print hist_all.Integral()
-func = ROOT.TF1("func","gaus",-2,2)
+func = ROOT.TF1("func","gaus",-3,3)
 func.SetLineColor(ROOT.kRed)
 func.SetLineWidth(3)
 hist_all.Fit(func,"R")
@@ -91,8 +93,12 @@ pave2.AddText("Toy : "+toy_func)
 pave2.AddText("# toys =%0.2f"%n_toys)
 pave2.AddText("#mu_{inj}=%s"%mu)
 pave2.AddText("Fit :")
-pave2.AddText("#mu=%0.2f"%func.GetParameter(1))
-pave2.AddText("#sigma=%0.2f"%func.GetParameter(2))
+#pave2.AddText("#mu=%0.2f"%func.GetParameter(1))
+#pave2.AddText("#sigma=%0.2f"%func.GetParameter(2))
+pave2.AddText("#mu=%0.2f#pm%.2f"%(func.GetParameter(1),func.GetParError(1)))
+pave2.AddText("#sigma=%0.2f#pm%.2f"%(func.GetParameter(2),func.GetParError(2)))
+#pave2.AddText("Mean=%0.2f"%(mean))
+#pave2.AddText("RMS=%0.2f"%(rms))
 pave2.SetFillColor(0)
 pave2.SetTextFont(42)
 pave2.SetTextColor(ROOT.kBlue)

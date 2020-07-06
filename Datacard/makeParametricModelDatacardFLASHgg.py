@@ -183,7 +183,7 @@ for node in whichNodes:
      combProc[proc] = proc
      allNodes.append(proc)
      allProcs.append(proc)
-for p in 'ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1'.split(','):
+for p in 'ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1,qqHH_CV_1_C2V_1_kl_1,qqHH_CV_1_C2V_2_kl_1,qqHH_CV_1_C2V_1_kl_2,qqHH_CV_1_C2V_1_kl_0,qqHH_CV_0p5_C2V_1_kl_1,qqHH_CV_1p5_C2V_1_kl_1'.split(','):
    for y in ['2016','2017','2018']:
      combProc[p+'_'+y] = p+'_'+y
      allNodes.append(p+'_'+y)
@@ -346,12 +346,16 @@ else:
   fileDetails['qqH_hgg']       = [sigFile.replace('$PROC',"vbf"),sigWS,'hggpdfsmrel_%dTeV_vbf_$CHANNEL'%sqrts]
   fileDetails['ttH_hgg']       = [sigFile.replace('$PROC',"tth"),sigWS,'hggpdfsmrel_%dTeV_tth_$CHANNEL'%sqrts]
   for proc in allProcs:
-      if (proc in allNodes) and ('2018' in proc) : fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif (proc in allNodes) and ('2017' in proc): fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif (proc in allNodes) and ('2016' in proc): fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif ('2018' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif ('2017' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
-      elif ('2016' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+
+#      if (proc in allNodes) and ('2018' in proc) : fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+#      elif (proc in allNodes) and ('2017' in proc): fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+#      elif (proc in allNodes) and ('2016' in proc): fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+#      elif ('2018' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+#      elif ('2017' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+#      elif ('2016' in proc) : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+      #if (proc in allNodes)  : fileDetails[proc] = 	[nodesFile[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+      #elif : fileDetails[proc] = 	[sigFiles[0],sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
+      fileDetails[proc] = 	[sigFile,sigWS,'%s_%dTeV_%s_$CHANNEL'%(signalPdfName,sqrts,proc)]
 
   if splitVH:
     fileDetails['WH_hgg']      =  [sigFile.replace('$PROC',"wh"),sigWS,'hggpdfsmrel_%dTeV_wh_$CHANNEL'%sqrts]
@@ -768,6 +772,15 @@ lumiSyst_2018=0.025
 lumiSyst_2017=0.023  
 lumiSyst_2016=0.025  
 lumiSyst=0.025  #Correct for Moriond17
+lumi_systematics = [ 
+		{'name':'lumi_13TeV_Uncorrelated','title':'lumi_13TeV_Uncorrelated','type':'constant','prior':'lnN','correlateAcrossYears':0,'value':{'2016':'1.022','2017':'1.020','2018':'1.015'}},
+		{'name':'lumi_13TeV_X_Y_Factorization','title':'lumi_13TeV_X_Y_Factorization','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'1.009','2017':'1.008','2018':'1.020'}},
+		{'name':'lumi_13TeV_Length_Scale','title':'lumi_13TeV_Length_Scale','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'-','2017':'1.003','2018':'1.002'}},
+		{'name':'lumi_13TeV_Beam_Beam_Deflection','title':'lumi_13TeV_Beam_Beam_Deflection','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'1.004','2017':'1.004','2018':'-'}},
+		{'name':'lumi_13TeV_Dynamic_Beta','title':'lumi_13TeV_Dynamic_Beta','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'1.005','2017':'1.005','2018':'-'}},
+		{'name':'lumi_13TeV_Beam_Current_Calibration','title':'lumi_13TeV_Beam_Current_Calibration','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'-','2017':'1.003','2018':'1.002'}},
+		{'name':'lumi_13TeV_Ghosts_And_Satellites','title':'lumi_13TeV_Ghosts_And_Satellites','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'1.004','2017':'1.001','2018':'-'}}]
+
 
 ##Printing Functions
 def printBRSyst():
@@ -892,7 +905,8 @@ def printTheorySystHHbbgg():
        theory_dict[current_proc] = unc
 
   #for cons in 'tth,qqh,vh,hh,ggh'.split(','):
-  for cons in 'tth,qqh,vh,ggh,ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1'.split(','):
+  for cons in 'tth,qqh,vh,ggh,ggHH,qqHH'.split(','):
+  #for cons in 'tth,qqh,vh,ggh,ggHH_kl_0_kt_1,ggHH_kl_1_kt_1,ggHH_kl_2p45_kt_1,ggHH_kl_5_kt_1,qqHH_CV_1_C2V_1_kl_1,qqHH_CV_1_C2V_2_kl_1,qqHH_CV_1_C2V_1_kl_2,qqHH_CV_1_C2V_1_kl_0,qqHH_CV_0p5_C2V_1_kl_1,qqHH_CV_1p5_C2V_1_kl_1'.split(','):
     outFile.write('%s%-35s   lnN   '%('pdf_',cons))
     for c in options.cats:
        for p in options.procs:
@@ -900,13 +914,15 @@ def printTheorySystHHbbgg():
          if p in bkgProcs:
            outFile.write('- ')
          elif (p.split('_')[0]) in cons :
-           outFile.write('%s '%(theory_dict[('pdf_'+(p.split('_201')[0]))])) #removing the year from the name
+           #outFile.write('%s '%(theory_dict[('pdf_'+(p.split('_201')[0]))])) #removing the year from the name
+           outFile.write('%s '%(theory_dict[('pdf_'+(p.split('_')[0]))])) 
          else : 
            outFile.write('- ')
     outFile.write('\n')
     outFile.write('\n')
 
-  for cons in 'tth,qqh,vh,ggh'.split(','):
+  #for cons in 'tth,qqh,vh,hh,ggh'.split(','):
+  for cons in 'thq,tth,qqh,vh,ggh,ggHH,qqHH'.split(','):
     outFile.write('%s%-35s   lnN   '%('QCDscale_',cons))
     for c in options.cats:
        for p in options.procs:
@@ -914,12 +930,43 @@ def printTheorySystHHbbgg():
          if p in bkgProcs:
            outFile.write('- ')
          elif (p.split('_')[0]) in cons :
-           outFile.write('%s '%(theory_dict[('QCDscale_'+(p.split('_201')[0]))]))#removing the year from the name
+           #outFile.write('%s '%(theory_dict[('QCDscale_'+(p.split('_201')[0]))]))#removing the year from the name
+           outFile.write('%s '%(theory_dict[('QCDscale_'+(p.split('_')[0]))]))
          else : 
            outFile.write('- ')
     outFile.write('\n')
     outFile.write('\n')
 
+def printLumiSystFullSchema():
+  for lumi_syst_dict in lumi_systematics:
+    if lumi_syst_dict['correlateAcrossYears']==0: #uncorrelated
+       for year in list(lumi_syst_dict['value'].keys()):
+         outFile.write('%-35s   lnN   '%('%s_%s'%(lumi_syst_dict['name'],year)))
+         for c in options.cats:
+           for p in options.procs:
+               if '%s:%s'%(p,c) in options.toSkip: continue
+               if p in bkgProcs:
+                  outFile.write('- ')
+               elif year in p :
+                outFile.write('%5.3f '%(float(lumi_syst_dict['value'][year])))
+               else : 
+                outFile.write('- ')
+         outFile.write('\n')
+         outFile.write('\n')
+    if lumi_syst_dict['correlateAcrossYears']==-1: #partially correlated
+       outFile.write('%-35s   lnN   '%('%s'%(lumi_syst_dict['name'])))
+       for c in options.cats:
+         for p in options.procs:
+             year_p = (p[p.find('_201')+1:])
+             if '%s:%s'%(p,c) in options.toSkip: continue
+             if p in bkgProcs:
+                outFile.write('- ')
+             elif year_p in list(lumi_syst_dict['value'].keys()) and lumi_syst_dict['value'][year_p]!='-' :
+              outFile.write('%5.3f '%(float(lumi_syst_dict['value'][year_p])))
+             else : 
+              outFile.write('- ')
+       outFile.write('\n')
+       outFile.write('\n')
 
 
 def printLumiSyst(year='2016'):
@@ -1064,6 +1111,10 @@ if options.do_HHbbgg_systematics:
   flashggSysts['JetBTagReshapeWeight'] = 'JetBTagReshapeWeight'
 #  flashggSysts['JEC'] = 'JEC' 
 #  flashggSysts['JER'] = 'JER' 
+  flashggSysts['JEC'] = 'JEC' 
+  flashggSysts['JER'] = 'JER' 
+  flashggSysts['PUJIDShift'] = 'PUJIDShift'
+  flashggSysts['MvaShift'] = 'phoIdMva'   #photonID
  
 
 
@@ -1225,7 +1276,7 @@ def printFileOptions():
       pdfname = infocopy[2].replace('$CHANNEL','%s'%c)
       if typ not in options.procs and typ!='data_obs': continue
       #outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file.replace(".root","_%s_%s.root"%(typ,c)),wsname+':'+pdfname))
-      if 'DoubleHTag_10' in c or 'DoubleHTag_11' in c : outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file.replace('70GeV','90GeV'),wsname+':'+pdfname))
+      if 'DoubleHTag_10' in c or 'DoubleHTag_11' in c : outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file.replace('70GeV','90GeV').replace('.root','_MjjRenamed.root'),wsname+':'+pdfname))  #this is needed because we have different range for these two categories
       else : outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
       #outFile.write('shapes %-10s %-15s %-30s %-30s\n'%(typ,'%s_%dTeV'%(c,sqrts),file,wsname+':'+pdfname))
   outFile.write('\n')
@@ -1814,9 +1865,10 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
   printObsProcBinLines()
   printMultiPdf()
  # printBRSyst() # not needed for the limit
-  printLumiSyst(year='2016')
-  printLumiSyst(year='2017')
-  printLumiSyst(year='2018')
+  printLumiSystFullSchema()
+#  printLumiSyst(year='2016')
+#  printLumiSyst(year='2017')
+#  printLumiSyst(year='2018')
   #nuisance param systematics
   #printNuisParams()
   #printMultiPdf()
