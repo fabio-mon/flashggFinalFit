@@ -781,6 +781,7 @@ lumi_systematics = [
 		{'name':'lumi_13TeV_Beam_Current_Calibration','title':'lumi_13TeV_Beam_Current_Calibration','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'-','2017':'1.003','2018':'1.002'}},
 		{'name':'lumi_13TeV_Ghosts_And_Satellites','title':'lumi_13TeV_Ghosts_And_Satellites','type':'constant','prior':'lnN','correlateAcrossYears':-1,'value':{'2016':'1.004','2017':'1.001','2018':'-'}}]
 
+dipoleOn_systematics = {'DoubleHTag_10': '1./0.045', 'DoubleHTag_11': '1./0.055', 'VBFDoubleHTag_0': '0.915/1.', 'DoubleHTag_2': '1./0.040', 'DoubleHTag_3': '1./0.060', 'DoubleHTag_0': '1./0.055', 'DoubleHTag_1': '1./0.020', 'DoubleHTag_6': '1./0.010', 'DoubleHTag_7': '1./0.050', 'DoubleHTag_4': '1./0.045', 'DoubleHTag_5': '1./0.035', 'DoubleHTag_8': '1./0.025', 'DoubleHTag_9': '1./0.010', 'VBFDoubleHTag_1': '0.95/1.'}
 
 ##Printing Functions
 def printBRSyst():
@@ -936,6 +937,22 @@ def printTheorySystHHbbgg():
            outFile.write('- ')
     outFile.write('\n')
     outFile.write('\n')
+
+def printDipoleOnSyst():
+  for cons in 'qqHH'.split(','):
+    outFile.write('%-35s   lnN   '%('qqHH_pythiaDipoleOn'))
+    for c in options.cats:
+       for p in options.procs:
+         if '%s:%s'%(p,c) in options.toSkip: continue
+         if p in bkgProcs:
+           outFile.write('- ')
+         elif (p.split('_')[0]) in cons :
+           outFile.write('%s '%(dipoleOn_systematics[c]))
+         else : 
+           outFile.write('- ')
+    outFile.write('\n')
+    outFile.write('\n')
+
 
 def printLumiSystFullSchema():
   for lumi_syst_dict in lumi_systematics:
@@ -1866,6 +1883,7 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
   printMultiPdf()
  # printBRSyst() # not needed for the limit
   printLumiSystFullSchema()
+  printDipoleOnSyst()
 #  printLumiSyst(year='2016')
 #  printLumiSyst(year='2017')
 #  printLumiSyst(year='2018')
