@@ -33,7 +33,7 @@ def get_options():
     #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11,VBFDoubleHTag_0')
     #parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9')
   #  parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,VBFDoubleHTag_0')
-    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_0,DoubleHTag_1,DoubleHTag_2,DoubleHTag_3,DoubleHTag_4,DoubleHTag_5,DoubleHTag_6,DoubleHTag_7,DoubleHTag_8,DoubleHTag_9,DoubleHTag_10,DoubleHTag_11')
+    parser.add_option("--cats",type='string',dest="cats",default='DoubleHTag_10,DoubleHTag_11')
     return parser.parse_args()
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
 
@@ -47,38 +47,29 @@ tfile_mjj = ROOT.TFile(opt.inp_dir_mjj + opt.inp_file_mjj)
 ws_mgg = tfile.Get("wsig_13TeV")
 ws_mjj = tfile_mjj.Get("wsig_13TeV")
 for num,f in enumerate(input_procs):
- print "doing proc "+f   
  for year in '2016,2017,2018'.split(','):
-  print "doing year "+year
+ #for year in '2018'.split(','):
   for cat_num,cat in enumerate(cats) :
-    print "doing cat "+cat 
-  #for cat_num,cat in enumerate([cats[0]]) : 
-    #if '2016'in year or '2017' in year and 'vbfhh' in f : continue
-
     pdf_mjj = "hbbpdfsm_13TeV_%s_%s_%s"%(input_procs[num],year,cat)
     pdf_mgg = "hggpdfsmrel_13TeV_%s_%s_%s"%(input_procs[num],year,cat)
     #ws_mjj.pdf(pdf_mjj).Print("v")
-    print "importing mjj workspace"
     getattr(ws_mgg, 'import')(ws_mjj.pdf(pdf_mjj),ROOT.RooCmdArg())
     getattr(ws_mgg, 'import')(ws_mjj.var("Mjj"),ROOT.RooCmdArg())
-    getattr(ws_mgg, 'import')(ws_mjj.var("Mjj_90GeV"),ROOT.RooCmdArg())
     prod_pdf = "hhbbggpdfsm_13TeV_%s_%s_%s"%(input_procs[num],year,cat)
-    print ws_mgg.pdf(pdf_mgg)
-    print ws_mjj.pdf(pdf_mjj)
-    print "building prod pdf"
+    #print ws_mgg.pdf(pdf_mgg)
+    #print ws_mjj.pdf(pdf_mjj)
     sig_prod_pdf = ROOT.RooProdPdf(prod_pdf,"",ws_mgg.pdf(pdf_mgg),ws_mjj.pdf(pdf_mjj))
     #sig_prod_pdf.Print("v") 
-
     getattr(ws_mgg, 'import')(sig_prod_pdf,ROOT.RooFit.RecycleConflictNodes())
     #Save normalization for combine
     #sig_prod_pdf_norm = (ws_mgg.function(pdf_mgg+"_norm")).clone(prod_pdf+"_norm")
     sig_prod_pdf_norm = (ws_mjj.function(pdf_mjj+"_norm")).clone(prod_pdf+"_norm")  #take norm from mjj?
     getattr(ws_mgg, 'import')(sig_prod_pdf_norm,ROOT.RooFit.RecycleConflictNodes())
     ##Printing normalization
-    ws_mgg.var("MH").setVal(125.)  #just to check that the normalization is the same for Mgg and Mjj, it is of course.
-    print 'mgg : ',ws_mgg.function(pdf_mgg+"_norm").getVal(),', mjj : ',ws_mjj.function(pdf_mjj+"_norm").getVal(), ", imported product : ",ws_mgg.function(prod_pdf+"_norm").getVal() #just to check that the normalization is the same for Mgg and Mjj, it is of course.
+   # ws_mgg.var("MH").setVal(125.)  #just to check that the normalization is the same for Mgg and Mjj, it is of course.
+   # print 'mgg : ',ws_mgg.function(pdf_mgg+"_norm").getVal(),', mjj : ',ws_mjj.function(pdf_mjj+"_norm").getVal(), ", imported product : ",ws_mgg.function(prod_pdf+"_norm").getVal() #just to check that the normalization is the same for Mgg and Mjj, it is of course.
     
-print "saving output"
+ 
 f_out = ROOT.TFile.Open(opt.out_dir+"CMS-HGG_sigfit_MggMjj_2016_2017_2018_%s.root"%opt.date,"RECREATE")
 #f_out = ROOT.TFile.Open(opt.out_dir+"CMS-HGG_sigfit_MggMjj_2018_%s.root"%opt.date,"RECREATE")
 ws_mgg.Write()
