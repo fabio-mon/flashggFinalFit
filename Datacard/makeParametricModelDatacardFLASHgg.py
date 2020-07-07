@@ -942,13 +942,18 @@ def printDipoleOnSyst():
   for cons in 'qqHH'.split(','):
     outFile.write('%-35s   lnN   '%('qqHH_pythiaDipoleOn'))
     for c in options.cats:
+       print "doing cat ",c
        for p in options.procs:
+         print "doing proc ",p
          if '%s:%s'%(p,c) in options.toSkip: continue
          if p in bkgProcs:
+           print "this is bkg" 
            outFile.write('- ')
          elif (p.split('_')[0]) in cons :
+           print p.split('_')[0]," is in ",cons 
            outFile.write('%s '%(dipoleOn_systematics[c]))
          else : 
+           print p.split('_')[0]," is NOT in ",cons
            outFile.write('- ')
     outFile.write('\n')
     outFile.write('\n')
@@ -1884,6 +1889,7 @@ if ((options.justThisSyst== "batch_split") or options.justThisSyst==""):
  # printBRSyst() # not needed for the limit
   printLumiSystFullSchema()
   printDipoleOnSyst()
+  exit()
 #  printLumiSyst(year='2016')
 #  printLumiSyst(year='2017')
 #  printLumiSyst(year='2018')
