@@ -310,10 +310,8 @@ for num,f in enumerate(input_files):
          print "trying to access to the input tree ","tagsDumper/trees/%s"%name
          if (tfile.Get("tagsDumper/trees/%s"%name).GetEntries())!=0 :
             data = rpd.read_root(tfilename,'tagsDumper/trees/%s'%name)
-            if(syst==''):#TEMPFIXXXXX
-                data['leadingJet_pt_Mjj'] = data['leadJet_pt']/data['Mjj']
-            else:
-                data['leadingJet_pt_Mjj'] = data['leadJetPt']/data['Mjj']
+            data['leadingJet_pt_Mjj'] = data['leadJet_pt']/data['Mjj']
+
             #if ('7' in cat ) or ('11' in cat ) : data = data.query("(leadingJet_pt_Mjj>0.55)")  #1/2.5 for all categories
             if ('DoubleHTag' in cat ) : 
                 data = data.query("(Mjj>0)")  #1/2.5 for all categories
